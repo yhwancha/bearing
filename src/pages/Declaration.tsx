@@ -8,6 +8,7 @@ import type { ResolvedLine } from '../types'
 import { Badge, Card, Empty, Flag, Meter, Notice, PageHead, toast } from '../ui'
 import { IconArrowRight, IconCheck, IconFile, IconShield, IconTruck, IconX } from '../ui/icons'
 import { IssueList, useOrderView } from './Order'
+import TradenetPreview from './TradenetPreview'
 
 function RouteCard({ tone, icon, title, note, lines, currency, footer }: {
   tone: 'info' | 'accent' | 'warn' | 'neutral'
@@ -263,6 +264,7 @@ export default function Declaration() {
           <div className="stack">
             <Rations v={v} locked={locked} />
             <Approvals v={v} locked={locked} />
+            <TradenetPreview v={v} />
           </div>
           <div className="stack">
             {locked ? (
