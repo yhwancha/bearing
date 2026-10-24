@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { viewOrder } from './derive'
+import Declaration from './pages/Declaration'
 import Order from './pages/Order'
 import Orders from './pages/Orders'
 import Overview from './pages/Overview'
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/" element={<Overview />} />
         <Route path="/orders" element={<Orders />} />
         <Route path="/orders/:id" element={<Order />} />
+        <Route path="/orders/:id/declaration" element={<Declaration />} />
         <Route path="/statements" element={<Placeholder title="Statements" />} />
         <Route path="/catalog" element={<Placeholder title="Catalog" />} />
         <Route path="/rules" element={<Rules />} />

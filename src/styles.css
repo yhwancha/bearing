@@ -842,3 +842,116 @@ fieldset:disabled .select {
 .search .input {
   padding-left: 32px;
 }
+
+/* ---------- Declaration ---------- */
+
+.routes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 1100px) { .routes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .routes { grid-template-columns: 1fr; } }
+
+.route {
+  --tone: var(--muted);
+  --tone-soft: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--tone);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  min-height: 210px;
+}
+
+.route-info { --tone: var(--info); --tone-soft: var(--info-soft); }
+.route-accent { --tone: var(--accent); --tone-soft: var(--accent-soft); }
+.route-warn { --tone: var(--warn); --tone-soft: var(--warn-soft); }
+
+.route header {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px 14px 10px;
+}
+
+.route-icon {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--tone-soft);
+  color: var(--tone);
+}
+
+.route h3 { font-size: 13.5px; font-weight: 620; }
+.route header p { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 2px; }
+
+.route-count {
+  margin-left: auto;
+  font-size: 20px;
+  font-weight: 650;
+  color: var(--tone);
+  line-height: 1;
+}
+
+.route ul {
+  list-style: none;
+  margin: 0;
+  padding: 0 14px;
+  flex: 1;
+}
+
+.route li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  padding: 5px 0;
+  border-top: 1px dashed var(--line);
+}
+
+.route-empty {
+  flex: 1;
+  padding: 0 14px;
+  color: var(--faint);
+  font-size: 12.5px;
+}
+
+.route footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.ration {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ration:last-child { border-bottom: 0; padding-bottom: 0; }
+
+.check {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.check.on { border-color: var(--accent-line); background: var(--accent-soft); }
+.check > div { flex: 1; }
+.check input { width: 16px; height: 16px; accent-color: var(--accent); }

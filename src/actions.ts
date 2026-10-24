@@ -3,7 +3,7 @@
 import type { ReadResult } from './engine'
 import { uid } from './format'
 import { update } from './store'
-import type { Order, Product, Proposal, Rule, VesselInfo } from './types'
+import type { Order, Product, Proposal, Rule, SgDeclaration, VesselInfo } from './types'
 
 function patchOrder(id: string, fn: (o: Order) => Order) {
   update((s) => ({ ...s, orders: s.orders.map((o) => (o.id === id ? fn(o) : o)) }))
@@ -100,4 +100,23 @@ export function rejectProposal(id: string) {
 
 export function deleteRule(id: string) {
   update((s) => ({ ...s, rules: s.rules.filter((r) => r.id !== id) }))
+}
+
+/* ---------- Declaration ---------- */
+
+export function setCaCheck(orderId: string, authority: string, ok: boolean) {
+  patchOrder(orderId, (o) => ({ ...o, caChecks: { ...o.caChecks, [authority]: ok } }))
+}
+
+/** Freeze the split so later rule changes never alter what was filed. */
+export function confirmDeclaration(orderId: string, decl: SgDeclaration) {
+  patchOrder(orderId, (o) => ({ ...o, decl: { ...decl, confirmedAt: new Date().toISOString() } }))
+}
+
+export function reopenDeclaration(orderId: string) {
+  patchOrder(orderId, (o) => ({ ...o, decl: undefined }))
+}
+
+export function recordPermit(orderId: string, permitNo: string) {
+  patchOrder(orderId, (o) => (o.decl ? { ...o, decl: { ...o.decl, tradenetPermitNo: permitNo.trim() || undefined } } : o))
 }
