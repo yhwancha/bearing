@@ -685,7 +685,7 @@ code,
 /* Sample emails in the new-order window */
 .samples {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -710,6 +710,22 @@ code,
 .sample:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .sample-head { display: flex; width: 100%; justify-content: space-between; gap: 6px; color: var(--accent); }
 .sample-head .strong { color: var(--ink); }
+
+.sample-preview {
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 @media (max-width: 640px) { .samples { grid-template-columns: 1fr; } }
 

@@ -76,52 +76,78 @@ Dear team, please supply the following on arrival:
 Best regards,
 Ops desk, Straits Line Agencies`
 
-/** Bonded stores inside the daily ration: one APS permit, nothing blocking. */
+/* Sample emails for the new-order window. Each is a different real-world shape of order,
+   so the demo shows the reader coping with more than one tidy format. */
+
+/** Typed in a hurry: shorthand, missing units, slang, particulars in one sentence, no vessel type. */
+const SAMPLE_SHORTHAND = `From: dennis.tan@merlion-agency.demo
+Subject: urgent - mv sea heron
+
+hi team, mv sea heron (panama, imo 9614402) at western anch, eta 1400 today.
+20 crew, sailing to manila 4 days. pls send asap:
+
+water 30
+eggs 10
+rice 5 bag
+coffee 3in1 6
+beer 10 cs
+smokes 8 ctn
+
+tks
+dennis`
+
+/** The master's requisition forwarded as a table with IMPA codes. Duty-paid only: no permit, monthly statement. */
+const SAMPLE_IMPA = `From: husbandry@merlion-agency.demo
+Subject: FW: Requisition REQ-PW-1026 / MV PACIFIC WREN
+
+Please find below the master's requisition for supply at Keppel Terminal.
+
+Ship's name : MV PACIFIC WREN
+IMO No.     : 9811460
+Flag state  : Hong Kong
+Ship type   : Container ship
+POB         : 21
+Next port   : Busan, ETA in 7 days
+
+IMPA   | DESCRIPTION                 | UNIT | QTY
+000105 | RICE JASMINE 25KG           | BAG  | 12
+000210 | EGGS FRESH 30PCS            | TRAY | 20
+000330 | DRINKING WATER 1.5L X 12    | CASE | 50
+000412 | INSTANT NOODLES 30 PKT      | CTN  | 15
+000515 | COFFEE 3IN1 50 SACHET       | BAG  | 10
+210301 | MOORING ROPE PP 40MM X 220M | COIL | 1
+190104 | WORK GLOVES COTTON          | PKT  | 10`
+
+/** Forwarded from the ship, quantity before the item. Bonded stores inside the ration: one APS permit, nothing blocking. */
 const SAMPLE_BONDED = `From: ops@straitsline.demo
-Subject: MT AMBER TIDE — bonded & engine stores
-Vessel: MT AMBER TIDE
-IMO: 9702245
-Flag: Bahamas
-Type: Product tanker
-Crew: 25
-Next port: Kaohsiung (10 days)
-Location: Eastern Petroleum Anchorage
+Subject: Fwd: Bonded stores - MT AMBER TIDE
 
-Please arrange bonded supply before departure:
+---------- Forwarded message ----------
+From: Master MT AMBER TIDE <master.ambertide@shipmail.demo>
+Date: Fri, 24 Oct 2026 06:12
 
-1. WHISKY 70CL x 36 BTL
-2. RED WINE 75CL x 24 BTL
-3. BEER 330ML CASE x 20
-4. CIGARETTES 200S CTN x 40
-5. ENGINE OIL SAE40 20L x 8 PAIL
+Dear Chandler,
 
-Regards,
-Ops desk, Straits Line Agencies`
+Kindly arrange the following bonded stores before departure from Eastern Petroleum Anchorage.
+Vessel: MT AMBER TIDE / product tanker / Bahamas flag / IMO 9702245
+Crew 25, voyage to Kaohsiung approx. 10 days.
 
-/** Duty-paid provisions only: no permit, everything goes on the monthly statement. */
-const SAMPLE_PROVISIONS = `From: husbandry@merlion-agency.demo
-Subject: MV PACIFIC WREN provisions
-Vessel: MV PACIFIC WREN
-IMO: 9811460
-Flag: Hong Kong
-Type: Container ship
-Crew: 21
-Next port: Busan (7 days)
-Location: Keppel Terminal
+36 BTL  Whisky 70cl
+24 BTL  Red wine 75cl
+20 CASE Beer 330ml
+40 CTN  Cigarettes 200s
+8 PAIL  Engine oil SAE40 20L
 
-1. RICE JASMINE 25KG BAG x 12
-2. EGGS 30PCS x 20 TRAY
-3. DRINKING WATER 1.5L x 50 CASES
-4. INSTANT NOODLES x 15 CTN
-5. COFFEE 3IN1 x 10 BAGS
-6. MOORING ROPE PP 40MM x 1 COIL
-7. WORK GLOVES COTTON x 10 PKT`
+Please deliver together with the customs permit.
+Capt. R. Santos
+Master, MT AMBER TIDE`
 
-/** Sample emails offered in the new-order window, one per situation the user should see. */
+/** Sample emails offered in the new-order window. `preview` is the excerpt shown on the card. */
 export const SAMPLES = [
-  { id: 'mixed', email: TRAP_EMAIL },
-  { id: 'bonded', email: SAMPLE_BONDED },
-  { id: 'provisions', email: SAMPLE_PROVISIONS },
+  { id: 'mixed', email: TRAP_EMAIL, preview: 'Vessel: MV OCEAN LYRA\n3. CIGARETTES 200S CTN x 60\n4. PUMP IMPELLER FOR INSTALLATION x 1' },
+  { id: 'shorthand', email: SAMPLE_SHORTHAND, preview: 'mv sea heron (panama, imo 9614402)\nwater 30\nsmokes 8 ctn' },
+  { id: 'impa', email: SAMPLE_IMPA, preview: 'IMPA   | DESCRIPTION       | QTY\n000105 | RICE JASMINE 25KG | 12\n210301 | MOORING ROPE PP   | 1' },
+  { id: 'bonded', email: SAMPLE_BONDED, preview: 'Fwd: Bonded stores - MT AMBER TIDE\n36 BTL  Whisky 70cl\n40 CTN  Cigarettes 200s' },
 ] as const
 
 export type SampleId = (typeof SAMPLES)[number]['id']

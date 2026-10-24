@@ -32,12 +32,13 @@ const SCHEMA = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['raw', 'desc', 'qty', 'orderUnit'],
+        required: ['raw', 'desc', 'qty', 'orderUnit', 'code'],
         properties: {
           raw: { type: 'string', description: 'The line exactly as written.' },
           desc: { type: 'string', description: 'Item description in upper case, without the quantity and order unit.' },
           qty: { type: 'number', description: 'Ordered quantity, copied from the line. Never computed.' },
-          orderUnit: { type: 'string', description: 'Order unit in upper case singular, e.g. BAG, CTN, BTL, CASE, PC.' },
+          orderUnit: { type: 'string', description: 'Order unit in upper case singular, e.g. BAG, CTN, BTL, CASE, PC. If the line has no unit, "".' },
+          code: { type: 'string', description: 'Item code written on the line, e.g. a 6-digit IMPA code, or "".' },
         },
       },
     },
@@ -46,7 +47,9 @@ const SCHEMA = {
 
 const SYSTEM = `You read stores orders that ship agencies email to a ship chandler in Singapore.
 Extract the vessel particulars and every ordered line. Copy numbers exactly as written; never calculate or guess.
-Leave a field empty ("" or 0) when the email does not state it. Ignore greetings, signatures and notes that are not order lines.`
+Leave a field empty ("" or 0) when the email does not state it. Ignore greetings, signatures and notes that are not order lines.
+Orders come in many shapes: numbered lists, tables with IMPA codes, quantity-first lines, forwarded requisitions from the master,
+and shorthand like "water 30" or "smokes 8 ctn". Vessel particulars may sit in a sentence instead of labelled fields.`
 
 export default async function handler(req: any, res: any) {
   if (cors(req, res)) return

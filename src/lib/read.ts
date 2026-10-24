@@ -16,7 +16,7 @@ interface ApiRead {
   subject: string
   agencyId: string
   vessel: { name: string; imo: string; flag: string; type: string; crew: number; voyageDays: number; location: string; eta: string }
-  lines: { raw: string; desc: string; qty: number; orderUnit: string }[]
+  lines: { raw: string; desc: string; qty: number; orderUnit: string; code: string }[]
 }
 
 const orUndef = <T,>(v: T | '' | 0): T | undefined => (v === '' || v === 0 ? undefined : v)
@@ -41,7 +41,7 @@ export async function readEmail(text: string, agencies: Agency[]): Promise<ReadO
           location: orUndef(r.vessel.location),
           eta: orUndef(r.vessel.eta),
         },
-        lines: lines.map((l, i) => ({ idx: i + 1, raw: l.raw, desc: l.desc.toUpperCase(), qty: l.qty, orderUnit: l.orderUnit.toUpperCase() || 'UNIT' })),
+        lines: lines.map((l, i) => ({ idx: i + 1, raw: l.raw, desc: l.desc.toUpperCase(), qty: l.qty, orderUnit: l.orderUnit.toUpperCase() || 'UNIT', code: l.code || undefined })),
       },
     }
   } catch (e) {

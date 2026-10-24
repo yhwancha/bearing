@@ -93,6 +93,8 @@ export interface OrderLine {
   qty: number
   /** Unit as written in the order, e.g. BAG, CTN, BTL. */
   orderUnit: string
+  /** Item code the buyer used, e.g. an IMPA code from the ship's requisition. */
+  code?: string
 }
 
 export type LineState = 'rule' | 'proposed' | 'unknown'

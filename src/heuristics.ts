@@ -22,7 +22,7 @@ const HINTS: Hint[] = [
   { test: /\bWINES?\b/, sgClass: 'dutiable_liquor', rationKind: 'wine', category: 'Bonded', why: 'wine' },
   { test: /\b(BEER|LAGER|STOUT|ALE)S?\b/, sgClass: 'dutiable_liquor', rationKind: 'beer', category: 'Bonded', why: 'beer' },
   { test: /\bCIGARS?\b|\bCHEROOTS?\b/, sgClass: 'dutiable_tobacco', rationKind: 'cigars', category: 'Bonded', why: 'cigars' },
-  { test: /\bCIGARETTES?\b/, sgClass: 'dutiable_tobacco', rationKind: 'cigarettes', category: 'Bonded', why: 'cigarettes' },
+  { test: /\bCIGARETTES?\b|\bSMOKES\b|\bCIGS?\b/, sgClass: 'dutiable_tobacco', rationKind: 'cigarettes', category: 'Bonded', why: 'cigarettes' },
   { test: /\bTOBACCO\b/, sgClass: 'dutiable_tobacco', rationKind: 'tobacco', category: 'Bonded', why: 'tobacco' },
   { test: /\b(FLARES?|PYROTECHNIC|ROCKETS?|LINE THROW(ING|ER)?|SMOKE SIGNAL)\b/, sgClass: 'controlled', controlAuthority: 'SPF Arms & Explosives', category: 'Safety', why: 'pyro' },
   { test: /\b(IMPELLER|VALVE|GASKET|BEARING|SEAL|FILTER|PISTON|LINER|INJECTOR|PUMP)S?\b/, sgClass: 'sea_store_paid', category: 'Spares', why: 'spare' },

@@ -45,7 +45,7 @@ export function LinesTable({ lines, currency, actions }: {
             <tr key={l.idx}>
               <td className="muted num">{l.idx}</td>
               <td>
-                <div className="mono small muted">{l.desc}</div>
+                <div className="mono small muted">{l.code && <span className="badge outline" style={{ marginRight: 6 }}>IMPA {l.code}</span>}{l.desc}</div>
                 {l.name ? (
                   <div className="strong">
                     {l.name} <span className="muted" style={{ fontWeight: 400 }}>· {l.spec}</span>

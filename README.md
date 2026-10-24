@@ -59,7 +59,14 @@
 5. Record delivery → Statements에 반영
 6. 같은 메일을 다시 넣으면 AI 없이 규칙만으로 바로 같은 결과 — 쓸수록 똑똑해지는 장면
 
-다른 예시 카드: "Bonded stores, within ration"(APS 허가 한 건, 바로 신고 가능), "Provisions only"(허가 없이 월간 명세서).
+예시 카드는 실제로 오는 발주 메일 네 가지 양식이다. 오프라인 판독기도 모두 읽는다.
+
+| 카드 | 양식 | 보여 주는 것 |
+| --- | --- | --- |
+| Mixed order with traps | 번호 목록 | 경로 4개, 배급 초과, 기관 승인, AI 분류 제안 |
+| Quick note in shorthand | 메신저체, 단위 생략("water 30", "smokes 8 ctn"), 선박 정보가 한 문장 | 단위는 제품에서 채움, 은어 분류, 선종 확인 |
+| Master's requisition with IMPA codes | IMPA 코드 표, 선장 청구서 전달 | 허가 없이 월간 명세서 |
+| Bonded stores from the master | 전달 메일, 수량이 품명 앞 | 배급 한도 이내, APS 허가 한 건 바로 신고 |
 
 처음 상태로 되돌리기: Overview → Reset demo
 

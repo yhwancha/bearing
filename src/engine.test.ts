@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findRule, heuristicRead, matchPattern, parseItemLine, resolveLines, tokenize } from './engine'
+import { findRule, heuristicRead, matchPattern, parseItemLine, parseTableRow, resolveLines, tokenize } from './engine'
 import type { Product, Rule } from './types'
 
 const rule = (id: string, pattern: string[], productId: string, agencyId: string | null = null): Rule => ({
@@ -29,6 +29,16 @@ describe('parseItemLine', () => {
     expect(parseItemLine('- CIGARETTES 200S CTN x 60')).toMatchObject({ qty: 60, orderUnit: 'CTN' })
     expect(parseItemLine('Fresh eggs 30pcs tray 12 TRAYS')).toMatchObject({ qty: 12, orderUnit: 'TRAY' })
   })
+  it('reads quantity-first lines and shorthand without units', () => {
+    expect(parseItemLine('36 BTL  Whisky 70cl')).toMatchObject({ desc: 'WHISKY 70CL', qty: 36, orderUnit: 'BTL' })
+    expect(parseItemLine('water 30')).toMatchObject({ desc: 'WATER', qty: 30, orderUnit: 'UNIT' })
+    expect(parseItemLine('beer 10 cs')).toMatchObject({ desc: 'BEER', qty: 10, orderUnit: 'CASE' })
+    expect(parseItemLine('POB : 21')).toBeNull()
+  })
+  it('reads requisition table rows with IMPA codes', () => {
+    expect(parseTableRow('000105 | RICE JASMINE 25KG | BAG | 12')).toMatchObject({ code: '000105', desc: 'RICE JASMINE 25KG', qty: 12, orderUnit: 'BAG' })
+    expect(parseTableRow('IMPA | DESCRIPTION | UNIT | QTY')).toBeNull()
+  })
   it('ignores prose', () => {
     expect(parseItemLine('Please supply the following by 0800 hrs')).toBeNull()
     expect(parseItemLine('Best regards')).toBeNull()
@@ -55,6 +65,14 @@ Location: Western Anchorage
     expect(r.agencyId).toBe('ag1')
     expect(r.vessel).toMatchObject({ name: 'MV OCEAN LYRA', imo: '9734512', flag: 'Liberia', type: 'cargo', crew: 20, voyageDays: 5, location: 'Western Anchorage' })
     expect(r.lines).toHaveLength(2)
+  })
+})
+
+describe('heuristicRead, particulars in a sentence', () => {
+  it('finds name, flag, IMO, crew and days without labels', () => {
+    const r = heuristicRead('hi team, mv sea heron (panama, imo 9614402) at western anch, eta 1400 today.\n20 crew, sailing to manila 4 days.\nwater 30', [])
+    expect(r.vessel).toMatchObject({ name: 'MV SEA HERON', flag: 'Panama', imo: '9614402', crew: 20, voyageDays: 4, location: 'Western Anchorage' })
+    expect(r.lines).toHaveLength(1)
   })
 })
 

@@ -59,15 +59,15 @@ export default function Intake({ onClose }: { onClose: () => void }) {
             {SAMPLES.map((s) => {
               const copy = t.intake.samples[s.id]
               const on = text === s.email
-              const vessel = s.email.match(/^Vessel:\s*(.+)$/m)?.[1]
               return (
                 <button key={s.id} type="button" role="radio" aria-checked={on} className={`sample ${on ? 'on' : ''}`} onClick={() => setText(s.email)}>
                   <span className="sample-head">
                     <span className="strong">{copy.title}</span>
                     {on && <IconCheck size={14} />}
                   </span>
-                  <span className="mono small muted">{vessel}</span>
-                  <span className="small">{copy.desc}</span>
+                  <Badge tone="info">{copy.format}</Badge>
+                  <pre className="sample-preview">{s.preview}</pre>
+                  <span className="small muted">{copy.desc}</span>
                   <span className="row wrap" style={{ gap: 4 }}>
                     {copy.tags.map((tag) => (
                       <Badge key={tag} tone="outline">{tag}</Badge>

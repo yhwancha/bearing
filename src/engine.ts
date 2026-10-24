@@ -85,7 +85,7 @@ export function resolveLines(
 const UNIT_WORDS = new Set([
   'BAG', 'BAGS', 'CTN', 'CTNS', 'CARTON', 'CARTONS', 'BTL', 'BTLS', 'BOTTLE', 'BOTTLES', 'CASE', 'CASES',
   'PC', 'PCS', 'EA', 'SET', 'SETS', 'ROLL', 'ROLLS', 'CAN', 'CANS', 'BOX', 'BOXES', 'PKT', 'PKTS', 'TIN', 'TINS',
-  'KG', 'KGS', 'LTR', 'LTRS', 'DRUM', 'DRUMS', 'PAIL', 'PAILS', 'TRAY', 'TRAYS', 'PACK', 'PACKS', 'UNIT', 'UNITS', 'COIL', 'COILS', 'PAIR', 'PAIRS', 'TUBE', 'TUBES',
+  'KG', 'KGS', 'LTR', 'LTRS', 'DRUM', 'DRUMS', 'PAIL', 'PAILS', 'TRAY', 'TRAYS', 'PACK', 'PACKS', 'UNIT', 'UNITS', 'COIL', 'COILS', 'PAIR', 'PAIRS', 'TUBE', 'TUBES', 'CS',
 ])
 
 function normUnit(u: string): string {
@@ -93,40 +93,66 @@ function normUnit(u: string): string {
   const singular: Record<string, string> = {
     BAGS: 'BAG', CTNS: 'CTN', CARTON: 'CTN', CARTONS: 'CTN', BTLS: 'BTL', BOTTLE: 'BTL', BOTTLES: 'BTL',
     CASES: 'CASE', PCS: 'PC', EA: 'PC', SETS: 'SET', ROLLS: 'ROLL', CANS: 'CAN', BOXES: 'BOX', PKTS: 'PKT',
-    TINS: 'TIN', KGS: 'KG', LTRS: 'LTR', DRUMS: 'DRUM', PAILS: 'PAIL', TRAYS: 'TRAY', PACKS: 'PACK', UNITS: 'UNIT', COILS: 'COIL', PAIRS: 'PAIR', TUBES: 'TUBE',
+    TINS: 'TIN', KGS: 'KG', LTRS: 'LTR', DRUMS: 'DRUM', PAILS: 'PAIL', TRAYS: 'TRAY', PACKS: 'PACK', UNITS: 'UNIT', COILS: 'COIL', PAIRS: 'PAIR', TUBES: 'TUBE', CS: 'CASE',
   }
   return singular[up] ?? up
 }
 
-/** "RICE JASMINE 25KG BAG x 10" → { desc, qty: 10, orderUnit: "BAG" } */
+const isUnit = (w: string | undefined) => !!w && UNIT_WORDS.has(w.toUpperCase())
+
+/** Reads one order line in the shapes agencies and masters actually send:
+    "RICE JASMINE 25KG BAG x 10", "EGGS 30PCS 15 TRAY", "36 BTL Whisky 70cl", and shorthand like "water 30". */
 export function parseItemLine(text: string): Omit<OrderLine, 'idx'> | null {
   const raw = text.trim()
   const s = raw.replace(/^\s*(?:\d{1,3}[.)]|[-*•])\s+/, '').trim()
-  let desc: string
-  let qty: number
+  if (!s || s.length > 90 || s.includes(':')) return null
+  let desc = ''
+  let qty = 0
   let unit = ''
+  let m: RegExpMatchArray | null
 
-  // "... x 24 BTL" / "... × 10"
-  let m = s.match(/^(.*?)[\s,]*[x×]\s*(\d+(?:\.\d+)?)\s*([A-Za-z]+)?\s*$/i)
-  if (m && m[1].trim()) {
-    desc = m[1].trim()
+  if ((m = s.match(/^(.*?)[\s,]*[x×]\s*(\d+(?:\.\d+)?)\s*([A-Za-z]+)?\s*$/i)) && m[1].trim()) {
+    // "... x 24 BTL" / "... × 10"
+    if (m[3] && !isUnit(m[3])) return null
+    desc = m[1]
     qty = Number(m[2])
-    if (m[3] && UNIT_WORDS.has(m[3].toUpperCase())) unit = normUnit(m[3])
-    else if (m[3]) return null
-  } else {
-    // "... QTY: 10 CTN" / "... 10 CTN"
-    m = s.match(/^(.*?)\s+(?:QTY[:.]?\s*)?(\d+(?:\.\d+)?)\s*([A-Za-z]+)\s*$/i)
-    if (!m || !UNIT_WORDS.has(m[3].toUpperCase()) || !m[1].trim()) return null
-    desc = m[1].trim()
+    unit = m[3] ?? ''
+  } else if ((m = s.match(/^(\d+(?:\.\d+)?)\s*([A-Za-z]+)\s+(.+)$/)) && isUnit(m[2])) {
+    // "36 BTL Whisky 70cl" — quantity first, as masters often write
+    qty = Number(m[1])
+    unit = m[2]
+    desc = m[3]
+  } else if ((m = s.match(/^(.*?)\s+(?:QTY[:.]?\s*)?(\d+(?:\.\d+)?)\s*([A-Za-z]+)\s*$/i)) && isUnit(m[3]) && m[1].trim()) {
+    // "... 10 CTN"
+    desc = m[1]
     qty = Number(m[2])
-    unit = normUnit(m[3])
-  }
+    unit = m[3]
+  } else if ((m = s.match(/^([A-Za-z][A-Za-z0-9 .,/&'-]*?)\s+(\d{1,4})$/)) && m[1].split(/\s+/).length <= 5) {
+    // "water 30": shorthand with no unit
+    desc = m[1]
+    qty = Number(m[2])
+  } else return null
+
+  desc = desc.trim().replace(/[\s,]+$/, '')
+  if (!desc) return null
   if (!unit) {
     const last = tokenize(desc).at(-1)
-    if (last && UNIT_WORDS.has(last)) unit = normUnit(last)
+    if (isUnit(last)) unit = last!
   }
   if (!(qty > 0)) return null
-  return { raw, desc: desc.toUpperCase(), qty, orderUnit: unit || 'UNIT' }
+  return { raw, desc: desc.toUpperCase(), qty, orderUnit: unit ? normUnit(unit) : 'UNIT' }
+}
+
+/** A row of a requisition table ("000105 | RICE JASMINE 25KG | BAG | 12"), cells split on | or tabs. */
+export function parseTableRow(text: string): Omit<OrderLine, 'idx'> | null {
+  if (!/[|\t]/.test(text)) return null
+  const cells = text.split(/\s*[|\t]\s*/).map((c) => c.trim()).filter(Boolean)
+  const qtyCell = [...cells].reverse().find((c) => /^\d+(?:\.\d+)?$/.test(c) && !/^\d{6}$/.test(c))
+  const code = cells.find((c) => /^\d{6}$/.test(c))
+  const unit = cells.find((c) => isUnit(c))
+  const desc = cells.filter((c) => c !== qtyCell && c !== code && c !== unit && /[A-Za-z]{2}/.test(c)).sort((a, b) => b.length - a.length)[0]
+  if (!qtyCell || !desc || !(Number(qtyCell) > 0)) return null
+  return { raw: text.trim(), desc: desc.toUpperCase(), qty: Number(qtyCell), orderUnit: unit ? normUnit(unit) : 'UNIT', code }
 }
 
 /** Berths and anchorages in the Port of Singapore the reader recognises. */
@@ -167,30 +193,52 @@ export interface ReadResult {
   lines: OrderLine[]
 }
 
-/** Best-effort reader for a pasted agency email. Used when the model is unavailable. */
+/** Flag states the reader recognises when there is no "Flag:" field. */
+const FLAGS = [
+  'Marshall Islands', 'Hong Kong', 'Panama', 'Liberia', 'Singapore', 'Bahamas', 'Malta', 'Greece', 'Cyprus', 'Norway',
+  'Japan', 'China', 'Korea', 'India', 'Indonesia', 'Malaysia', 'Vietnam', 'Philippines', 'Denmark', 'Portugal',
+]
+
+const VESSEL_NAME = /\b(M\/?V|M\/?T)\.?\s+([A-Za-z0-9][A-Za-z0-9 ]*?)(?=\s*(?:[(),.;:/]|\s-\s|\s+(?:at|@|is|eta)\b|$))/im
+
+function vesselName(raw: string): string {
+  const m = raw.match(VESSEL_NAME)
+  if (m) return `${m[1].replace('/', '').toUpperCase()} ${m[2].trim().toUpperCase()}`
+  return raw.split(' / ')[0].replace(/\(.*?\)/g, '').replace(/\s{2,}/g, ' ').trim().toUpperCase()
+}
+
+/** Best-effort reader for a pasted agency email. Used when the model is unavailable.
+    Handles labelled fields, particulars written in a sentence, and the usual shorthand ("western anch"). */
 export function heuristicRead(text: string, agencies: Agency[]): ReadResult {
   const from = field(text, ['From']) ?? ''
   const agency = agencies.find((a) => from.toLowerCase().includes(a.domain) || text.toLowerCase().includes(a.domain))
   const subject = field(text, ['Subject', 'Re']) ?? ''
+  const plain = text.replace(/\banch\b\.?/gi, 'anchorage')
 
-  const vesselRaw = field(text, ['Vessel', 'Vessel name', 'Ship', 'MV', 'M\\.V\\.']) ?? subject.match(/\b(?:MV|M\/V|MT|M\/T)\s+[A-Z][A-Z0-9 ]+/)?.[0] ?? ''
-  const name = vesselRaw.replace(/\(.*?\)/g, '').replace(/\s{2,}/g, ' ').trim().toUpperCase()
+  const vesselField = field(text, ['Vessel', 'Vessel name', "Ship's name", 'Ship name', 'Ship', 'MV', 'M\\.V\\.'])
+  const name = vesselName(vesselField ?? (VESSEL_NAME.test(subject) ? subject : text))
   const imo = text.match(/\bIMO\s*(?:No\.?|Number)?\s*[:#]?\s*(\d{7})\b/i)?.[1]
-  const flag = field(text, ['Flag', 'Nationality', 'Flag state'])
-  const typeText = field(text, ['Type', 'Vessel type', 'Ship type']) ?? vesselRaw
-  const crew = Number(field(text, ['Crew', 'Crew onboard', 'POB'])?.match(/\d+/)?.[0]) || undefined
+  const flag =
+    field(text, ['Flag', 'Nationality', 'Flag state']) ??
+    FLAGS.find((f) => new RegExp(`\\b${f}\\b`, 'i').test(text))
+  const typeText = field(text, ['Type', 'Vessel type', 'Ship type']) ?? vesselField ?? ''
+  const crew =
+    Number(field(text, ['Crew', 'Crew onboard', 'POB'])?.match(/\d+/)?.[0]) ||
+    Number(text.match(/\b(\d+)[ \t]*(?:crew|pob|persons on board)\b/i)?.[1]) ||
+    Number(text.match(/\bcrew[ \t]*(?:of[ \t]*)?(\d+)\b/i)?.[1]) ||
+    undefined
   const voyage =
     Number(field(text, ['Voyage days', 'Days to next port', 'Voyage'])?.match(/\d+/)?.[0]) ||
-    Number(text.match(/\((\d+)\s*days?\)/i)?.[1]) ||
+    Number(text.match(/\b(\d+)[ \t]*days?\b/i)?.[1]) ||
     undefined
   const eta = field(text, ['ETA', 'Arrival'])
   const location =
-    SG_LOCATIONS.find((l) => text.toLowerCase().includes(l.toLowerCase())) ?? field(text, ['Location', 'Berth', 'Anchorage'])
+    SG_LOCATIONS.find((l) => plain.toLowerCase().includes(l.toLowerCase())) ?? field(text, ['Location', 'Berth', 'Anchorage'])
 
   const lines: OrderLine[] = []
   for (const row of text.split(/\r?\n/)) {
     if (/^\s*(from|to|subject|vessel|imo|flag|type|crew|eta|location|voyage|date|cc)\b/i.test(row)) continue
-    const parsed = parseItemLine(row)
+    const parsed = parseTableRow(row) ?? parseItemLine(row)
     if (parsed) lines.push({ ...parsed, idx: lines.length + 1 })
   }
 
