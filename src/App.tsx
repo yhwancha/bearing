@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { viewOrder } from './derive'
+import Catalog from './pages/Catalog'
 import Declaration from './pages/Declaration'
 import Delivery from './pages/Delivery'
 import Order from './pages/Order'
@@ -10,11 +11,7 @@ import Rules from './pages/Rules'
 import Statements from './pages/Statements'
 import Shell from './Shell'
 import { useStore } from './store'
-import { PageHead } from './ui'
-
-function Placeholder({ title }: { title: string }) {
-  return <PageHead title={title} sub="Coming up next." />
-}
+import { Empty } from './ui'
 
 export default function App() {
   const state = useStore((s) => s)
@@ -28,8 +25,9 @@ export default function App() {
         <Route path="/orders/:id/declaration" element={<Declaration />} />
         <Route path="/orders/:id/delivery" element={<Delivery />} />
         <Route path="/statements" element={<Statements />} />
-        <Route path="/catalog" element={<Placeholder title="Catalog" />} />
+        <Route path="/catalog" element={<Catalog />} />
         <Route path="/rules" element={<Rules />} />
+        <Route path="*" element={<Empty title="Page not found" />} />
       </Routes>
     </Shell>
   )

@@ -976,3 +976,5 @@ fieldset:disabled .select {
   text-overflow: ellipsis;
   max-width: 220px;
 }
+
+.table td.mono { white-space: nowrap; }

@@ -130,3 +130,17 @@ export function recordDelivery(orderId: string, delivery: Delivery) {
 export function clearDelivery(orderId: string) {
   patchOrder(orderId, (o) => ({ ...o, delivery: undefined }))
 }
+
+/* ---------- Catalog ---------- */
+
+export function saveProduct(p: Product) {
+  update((s) => ({
+    ...s,
+    products: s.products.some((x) => x.id === p.id) ? s.products.map((x) => (x.id === p.id ? p : x)) : [...s.products, p],
+  }))
+}
+
+/** Removing a product also removes the rules that point to it. */
+export function deleteProduct(id: string) {
+  update((s) => ({ ...s, products: s.products.filter((p) => p.id !== id), rules: s.rules.filter((r) => r.productId !== id) }))
+}
