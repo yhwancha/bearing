@@ -26,7 +26,7 @@ export default function Intake({ onClose }: { onClose: () => void }) {
         return
       }
       const id = addOrder(out.result, text, agencyId || out.result.agencyId || agencies[0]?.id || '', out.source)
-      toast(`Read ${out.result.lines.length} lines${out.source === 'heuristic' ? ' with the offline reader' : ''}`)
+      toast(out.source === 'ai' ? `Read ${out.result.lines.length} lines` : `Read ${out.result.lines.length} lines offline (${out.fallbackReason})`)
       onClose()
       navigate(`/orders/${id}`)
     } finally {

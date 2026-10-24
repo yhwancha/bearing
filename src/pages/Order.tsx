@@ -154,6 +154,7 @@ export function IssueList({ issues }: { issues: Issue[] }) {
 function Classify({ v }: { v: OrderView }) {
   const products = useStore((s) => s.products)
   const proposals = useStore((s) => s.proposals)
+  const rules = useStore((s) => s.rules)
   const [busy, setBusy] = useState(false)
   const unknown = v.lines.filter((l) => l.state === 'unknown')
   const pending = proposals.filter((p) => p.status === 'pending' && p.orderId === v.order.id && v.lines.some((l) => l.proposalId === p.id))
@@ -162,9 +163,9 @@ function Classify({ v }: { v: OrderView }) {
   async function suggest() {
     setBusy(true)
     try {
-      const out = await proposeFor(v.order, unknown, products)
+      const out = await proposeFor(v.order, unknown, products, rules)
       addProposals(out.proposals)
-      if (out.source === 'heuristic') toast(`${out.fallbackReason ?? 'Offline suggestions'} — review before approving`)
+      toast(out.source === 'ai' ? 'Suggestions ready — review before approving' : `Offline suggestions (${out.fallbackReason}) — review before approving`)
     } finally {
       setBusy(false)
     }
@@ -248,8 +249,10 @@ export default function OrderPage() {
       />
       <div className="split">
         <div className="stack">
-          {o.readSource === 'heuristic' && !filed && (
-            <Notice>Read with the offline reader. Check the vessel details and lines against the email.</Notice>
+          {!filed && (
+            <Notice tone={o.readSource === 'ai' ? 'ok' : 'info'}>
+              {o.readSource === 'ai' ? 'Read by AI. Quantities are copied from the email, never calculated.' : 'Read with the offline reader. Check the vessel details and lines against the email.'}
+            </Notice>
           )}
           {!filed && <Classify v={v} />}
           <Card title="Lines" meta={`${o.lines.length} lines · ${fmtMoney(sumAmount(v.lines), o.currency)}`} pad={false}>
