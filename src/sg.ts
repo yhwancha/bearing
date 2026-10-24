@@ -157,6 +157,9 @@ export function sgPreflight(decl: SgDeclaration, v: VesselInfo): Issue[] {
     if (!v.finalPort) issues.push({ level: 'block', code: 'final_port', message: t.issue.finalPort })
     if (!v.voyageNo) issues.push({ level: 'warn', code: 'voyage_no', message: t.issue.voyageNo })
     if (!v.departure) issues.push({ level: 'warn', code: 'departure', message: t.issue.departure })
+    // Each permit item carries its HS code and country of origin
+    const bare = decl.lines.filter((l) => decl.permitLines.includes(l.idx) && l.sgClass && (!l.hs || !l.origin)).map((l) => l.idx)
+    if (bare.length) issues.push({ level: 'block', code: 'item_fields', message: t.issue.itemFields(bare.length), lines: bare })
   }
 
   if (decl.excluded.length) issues.push({ level: 'warn', code: 'install', message: t.issue.install(decl.excluded.length), lines: decl.excluded })

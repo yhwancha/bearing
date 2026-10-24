@@ -4,10 +4,10 @@ import type { Currency } from './types'
 /* Intl formatters are built once per locale; the locale changes with the UI language. */
 const cache = new Map<string, Intl.NumberFormat | Intl.DateTimeFormat>()
 
-function nf(key: string, opts: Intl.NumberFormatOptions): Intl.NumberFormat {
-  const k = `${LOCALE}|${key}`
+function nf(key: string, opts: Intl.NumberFormatOptions, locale = LOCALE): Intl.NumberFormat {
+  const k = `${locale}|${key}`
   let f = cache.get(k) as Intl.NumberFormat | undefined
-  if (!f) cache.set(k, (f = new Intl.NumberFormat(LOCALE, opts)))
+  if (!f) cache.set(k, (f = new Intl.NumberFormat(locale, opts)))
   return f
 }
 
@@ -18,8 +18,8 @@ function df(key: string, opts: Intl.DateTimeFormatOptions, locale = LOCALE): Int
   return f
 }
 
-export function fmtMoney(amount: number, currency: Currency = 'SGD'): string {
-  const f = nf(currency, { style: 'currency', currency, currencyDisplay: 'code', minimumFractionDigits: 2 })
+export function fmtMoney(amount: number, currency: Currency = 'SGD', locale?: string): string {
+  const f = nf(currency, { style: 'currency', currency, currencyDisplay: 'code', minimumFractionDigits: 2 }, locale)
   // "SGD 1,234.50" reads better than the narrow no-break space Intl puts between code and number
   return f.format(amount).replace(/[\u00a0\u202f]/g, ' ')
 }

@@ -1101,15 +1101,30 @@ fieldset:disabled .select {
 .check > div { flex: 1; }
 .check input { width: 16px; height: 16px; accent-color: var(--accent); }
 
-.tradenet-head {
+.tradenet-tabs { padding: 12px 18px 0; }
+.tab-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--bad); margin-left: 6px; vertical-align: middle; }
+.tradenet-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 28px;
   padding: 16px 18px;
-  grid-template-columns: max-content 1fr max-content 1fr;
   border-bottom: 1px solid var(--line);
   background: var(--surface-2);
 }
+.tradenet-sections h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.tradenet-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
+.tradenet-head dd { overflow-wrap: anywhere; }
+.missing a { color: inherit; text-decoration: underline; }
 
 @media (max-width: 760px) {
-  .tradenet-head { grid-template-columns: max-content 1fr; }
+  .tradenet-sections { grid-template-columns: 1fr; }
 }
 
 .missing { color: var(--bad); font-weight: 500; }

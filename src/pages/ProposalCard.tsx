@@ -76,6 +76,10 @@ export default function ProposalCard({ proposal }: { proposal: Proposal }) {
           <span>{t.common.unitPrice}</span>
           <input className="input num" type="number" min={0} step="0.01" value={d.price ?? ''} onChange={(e) => set({ price: e.target.value === '' ? undefined : Number(e.target.value) })} />
         </label>
+        <label className="field">
+          <span>{t.common.origin}</span>
+          <input className="input mono" maxLength={2} value={d.origin ?? ''} placeholder="TH" onChange={(e) => set({ origin: e.target.value.toUpperCase() || undefined })} />
+        </label>
         {d.sgClass === 'controlled' && (
           <label className="field" style={{ gridColumn: 'span 3' }}>
             <span>{t.common.competentAuthority}</span>

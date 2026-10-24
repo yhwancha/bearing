@@ -12,11 +12,11 @@ const line = (idx: number, desc: string, qty: number, extra: Partial<ResolvedLin
 })
 
 const demo: ResolvedLine[] = [
-  line(1, 'RICE JASMINE 25KG BAG', 10, { sgClass: 'sea_store_paid', name: 'Jasmine rice', spec: '25 kg', unit: 'BAG', unitPrice: 46 }),
-  line(2, 'WHISKY 70CL', 24, { sgClass: 'dutiable_liquor', rationKind: 'spirits', rationUnitQty: 1, unitPrice: 38 }),
-  line(3, 'CIGARETTES 200S CTN', 60, { sgClass: 'dutiable_tobacco', rationKind: 'cigarettes', rationUnitQty: 200, unitPrice: 31 }),
+  line(1, 'RICE JASMINE 25KG BAG', 10, { sgClass: 'sea_store_paid', name: 'Jasmine rice', spec: '25 kg', unit: 'BAG', unitPrice: 46, hs: '1006.30', origin: 'TH' }),
+  line(2, 'WHISKY 70CL', 24, { sgClass: 'dutiable_liquor', rationKind: 'spirits', rationUnitQty: 1, unitPrice: 38, hs: '2208.30', origin: 'GB', spec: '70 cl', unit: 'BTL' }),
+  line(3, 'CIGARETTES 200S CTN', 60, { sgClass: 'dutiable_tobacco', rationKind: 'cigarettes', rationUnitQty: 200, unitPrice: 31, hs: '2402.20', origin: 'ID', unit: 'CTN' }),
   line(4, 'PUMP IMPELLER FOR INSTALLATION', 1, { sgClass: 'ship_spare_install', unitPrice: 880 }),
-  line(5, 'FRESH BEEF CHILLED 20KG', 4, { sgClass: 'controlled', controlAuthority: 'SFA', unitPrice: 310 }),
+  line(5, 'FRESH BEEF CHILLED 20KG', 4, { sgClass: 'controlled', controlAuthority: 'SFA', unitPrice: 310, hs: '0201.30', origin: 'AU', unit: 'CTN' }),
 ]
 
 describe('vessel eligibility', () => {
@@ -68,6 +68,10 @@ describe('sgPreflight', () => {
     const bare = { ...vessel, nrt: undefined, nextPort: undefined, finalPort: undefined, voyageNo: undefined }
     const codes = sgPreflight(splitSgDeclaration(demo, bare), bare).map((i) => `${i.level}:${i.code}`)
     expect(codes).toEqual(expect.arrayContaining(['block:nrt', 'block:next_port', 'block:final_port', 'warn:voyage_no']))
+  })
+  it('blocks permit lines without an HS code or origin', () => {
+    const lines = demo.map((l) => (l.idx === 2 ? { ...l, origin: undefined } : l))
+    expect(sgPreflight(splitSgDeclaration(lines, vessel), vessel).find((i) => i.code === 'item_fields')).toMatchObject({ level: 'block', lines: [2] })
   })
   it('blocks dutiable stores on an unknown or unapproved vessel type', () => {
     const v = { ...vessel, type: undefined }
