@@ -85,7 +85,7 @@ export function resolveLines(
 const UNIT_WORDS = new Set([
   'BAG', 'BAGS', 'CTN', 'CTNS', 'CARTON', 'CARTONS', 'BTL', 'BTLS', 'BOTTLE', 'BOTTLES', 'CASE', 'CASES',
   'PC', 'PCS', 'EA', 'SET', 'SETS', 'ROLL', 'ROLLS', 'CAN', 'CANS', 'BOX', 'BOXES', 'PKT', 'PKTS', 'TIN', 'TINS',
-  'KG', 'KGS', 'LTR', 'LTRS', 'DRUM', 'DRUMS', 'PAIL', 'PAILS', 'TRAY', 'TRAYS', 'PACK', 'PACKS', 'UNIT', 'UNITS',
+  'KG', 'KGS', 'LTR', 'LTRS', 'DRUM', 'DRUMS', 'PAIL', 'PAILS', 'TRAY', 'TRAYS', 'PACK', 'PACKS', 'UNIT', 'UNITS', 'COIL', 'COILS', 'PAIR', 'PAIRS', 'TUBE', 'TUBES',
 ])
 
 function normUnit(u: string): string {
@@ -93,7 +93,7 @@ function normUnit(u: string): string {
   const singular: Record<string, string> = {
     BAGS: 'BAG', CTNS: 'CTN', CARTON: 'CTN', CARTONS: 'CTN', BTLS: 'BTL', BOTTLE: 'BTL', BOTTLES: 'BTL',
     CASES: 'CASE', PCS: 'PC', EA: 'PC', SETS: 'SET', ROLLS: 'ROLL', CANS: 'CAN', BOXES: 'BOX', PKTS: 'PKT',
-    TINS: 'TIN', KGS: 'KG', LTRS: 'LTR', DRUMS: 'DRUM', PAILS: 'PAIL', TRAYS: 'TRAY', PACKS: 'PACK', UNITS: 'UNIT',
+    TINS: 'TIN', KGS: 'KG', LTRS: 'LTR', DRUMS: 'DRUM', PAILS: 'PAIL', TRAYS: 'TRAY', PACKS: 'PACK', UNITS: 'UNIT', COILS: 'COIL', PAIRS: 'PAIR', TUBES: 'TUBE',
   }
   return singular[up] ?? up
 }
