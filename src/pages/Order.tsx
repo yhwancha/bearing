@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { addProposals, deleteOrder, updateVessel } from '../actions'
-import { headline, statusInfo, viewOrder, type OrderView } from '../derive'
+import { statusInfo, viewOrder, type OrderView } from '../derive'
 import { fmtDateTime, fmtMoney } from '../format'
 import { t } from '../i18n'
 import { proposeFor } from '../lib/propose'
@@ -11,6 +11,7 @@ import type { ResolvedLine, VesselInfo, VesselType } from '../types'
 import { Badge, Card, Empty, Flag, Notice, PageHead, toast } from '../ui'
 import { IconAlert, IconArrowRight, IconCheck, IconShip, IconSparkle, IconTrash } from '../ui/icons'
 import { ClassBadge } from '../ui/sg'
+import Progress from './Progress'
 import ProposalCard from './ProposalCard'
 
 export function useOrderView(id: string | undefined): OrderView | undefined {
@@ -247,26 +248,26 @@ export default function OrderPage() {
           </>
         }
       />
-      <div className="split">
-        <div className="stack">
-          {!filed && (
-            <Notice tone={o.readSource === 'ai' ? 'ok' : 'info'}>
-              {o.readSource === 'ai' ? t.order.readByAi : t.order.readOffline}
-            </Notice>
-          )}
-          {!filed && <Classify v={v} />}
-          <Card title={t.order.lines} meta={t.order.linesMeta(o.lines.length, fmtMoney(sumAmount(v.lines), o.currency))} pad={false}>
-            <LinesTable lines={v.lines} currency={o.currency} />
-          </Card>
-          <Card title={t.order.email} pad={false}>
-            <pre className="email">{o.raw}</pre>
-          </Card>
-        </div>
-        <div className="stack">
-          <Card title={t.order.beforeFiling} meta={headline(v).length ? t.common.blocking(v.blocking.length) : undefined}>
-            <IssueList issues={v.issues} />
-          </Card>
-          <VesselCard orderId={o.id} vessel={o.vessel} locked={filed} />
+      <div className="stack">
+        <Progress v={v} page="order" />
+        <div className="split">
+          <div className="stack">
+            {!filed && (
+              <Notice tone={o.readSource === 'ai' ? 'ok' : 'info'}>
+                {o.readSource === 'ai' ? t.order.readByAi : t.order.readOffline}
+              </Notice>
+            )}
+            {!filed && <Classify v={v} />}
+            <Card title={t.order.lines} meta={t.order.linesMeta(o.lines.length, fmtMoney(sumAmount(v.lines), o.currency))} pad={false}>
+              <LinesTable lines={v.lines} currency={o.currency} />
+            </Card>
+            <Card title={t.order.email} pad={false}>
+              <pre className="email">{o.raw}</pre>
+            </Card>
+          </div>
+          <div className="stack">
+            <VesselCard orderId={o.id} vessel={o.vessel} locked={filed} />
+          </div>
         </div>
       </div>
     </>

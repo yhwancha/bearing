@@ -53,3 +53,19 @@ export function headline(v: OrderView): { label: string; tone: 'bad' | 'warn' }[
   if (codes.has('flag') || codes.has('vessel_type') || codes.has('crew_days') || codes.has('vessel_name')) out.push({ label: t.headline.vesselMissing, tone: 'warn' })
   return out
 }
+
+export type StepKey = 'classify' | 'check' | 'confirm' | 'permit' | 'deliver'
+export const STEPS: StepKey[] = ['classify', 'check', 'confirm', 'permit', 'deliver']
+
+/** Where the order stands in the filing flow, and the one thing to do next ('done' when nothing is left). */
+export function progress(v: OrderView): { done: Record<StepKey, boolean>; current: StepKey | 'done' } {
+  const filed = !!v.order.decl?.confirmedAt
+  const done: Record<StepKey, boolean> = {
+    classify: filed || v.lines.every((l) => l.sgClass && l.state !== 'proposed'),
+    check: filed || !v.blocking.length,
+    confirm: filed,
+    permit: filed && (!!v.order.decl?.tradenetPermitNo || !v.decl.permits.length),
+    deliver: !!v.order.delivery,
+  }
+  return { done, current: STEPS.find((s) => !done[s]) ?? 'done' }
+}

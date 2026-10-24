@@ -1,52 +1,50 @@
-import { useState, type ReactNode } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { confirmDeclaration, recordPermit, reopenDeclaration, setCaCheck, updateLineQty } from '../actions'
+import { type ReactNode } from 'react'
+import { useParams } from 'react-router-dom'
+import { reopenDeclaration, setCaCheck, updateLineQty } from '../actions'
 import type { OrderView } from '../derive'
-import { fmtDateTime, fmtMoney, fmtNum } from '../format'
+import { fmtMoney, fmtNum } from '../format'
 import { t } from '../i18n'
 import { lineAmount, RATION_LIMITS, sumAmount } from '../sg'
 import type { ResolvedLine } from '../types'
-import { Badge, Card, Empty, Flag, Meter, Notice, PageHead, toast } from '../ui'
-import { IconArrowRight, IconCheck, IconFile, IconShield, IconTruck, IconX } from '../ui/icons'
-import { IssueList, useOrderView } from './Order'
+import { Badge, Card, Empty, Flag, Meter, PageHead } from '../ui'
+import { IconCheck, IconFile, IconShield, IconX } from '../ui/icons'
+import { useOrderView } from './Order'
+import Progress from './Progress'
 import TradenetPreview from './TradenetPreview'
 
-function RouteCard({ tone, icon, title, note, lines, currency, footer }: {
+interface Route {
+  key: string
   tone: 'info' | 'accent' | 'warn' | 'neutral'
   icon: ReactNode
   title: string
   note: string
   lines: ResolvedLine[]
-  currency: 'SGD' | 'USD'
-  footer?: ReactNode
-}) {
+}
+
+function RouteCard({ route, currency }: { route: Route; currency: 'SGD' | 'USD' }) {
   return (
-    <section className={`route route-${tone}`}>
+    <section className={`route route-${route.tone}`}>
       <header>
-        <span className="route-icon">{icon}</span>
+        <span className="route-icon">{route.icon}</span>
         <div>
-          <h3>{title}</h3>
-          <p>{note}</p>
+          <h3>{route.title}</h3>
+          <p>{route.note}</p>
         </div>
-        <span className="route-count num">{lines.length}</span>
+        <span className="route-count num">{route.lines.length}</span>
       </header>
-      {lines.length ? (
-        <ul>
-          {lines.map((l) => (
-            <li key={l.idx}>
-              <span>{l.name ?? l.desc}</span>
-              <span className="num muted">
-                {l.qty} {l.unit ?? l.orderUnit}
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="route-empty">{t.decl.none}</p>
-      )}
+      <ul>
+        {route.lines.map((l) => (
+          <li key={l.idx}>
+            <span>{l.name ?? l.desc}</span>
+            <span className="num muted">
+              {l.qty} {l.unit ?? l.orderUnit}
+            </span>
+          </li>
+        ))}
+      </ul>
       <footer>
-        {footer ?? <span />}
-        <span className="num strong">{fmtMoney(sumAmount(lines), currency)}</span>
+        <span />
+        <span className="num strong">{fmtMoney(sumAmount(route.lines), currency)}</span>
       </footer>
     </section>
   )
@@ -132,55 +130,25 @@ function Approvals({ v, locked }: { v: OrderView; locked: boolean }) {
   )
 }
 
-function Filing({ v }: { v: OrderView }) {
-  const d = v.order.decl!
-  const [permit, setPermit] = useState(d.tradenetPermitNo ?? '')
-  return (
-    <Card title={t.decl.filed} meta={t.decl.confirmedAt(fmtDateTime(d.confirmedAt))}>
-      <div className="stack">
-        <label className="field">
-          <span>{t.decl.permitNo}</span>
-          <div className="row">
-            <input className="input mono" value={permit} placeholder={t.decl.permitPlaceholder} onChange={(e) => setPermit(e.target.value.toUpperCase())} />
-            <button
-              className="btn"
-              disabled={permit === (d.tradenetPermitNo ?? '')}
-              onClick={() => {
-                recordPermit(v.order.id, permit)
-                toast(t.decl.permitSaved)
-              }}
-            >
-              {t.common.save}
-            </button>
-          </div>
-        </label>
-        <div className="row wrap">
-          {!v.order.delivery && (
-            <button className="btn ghost sm" onClick={() => confirm(t.decl.reopenConfirm) && reopenDeclaration(v.order.id)}>
-              {t.decl.reopen}
-            </button>
-          )}
-          <span className="spacer" />
-          <Link to={`/orders/${v.order.id}/delivery`} className="btn primary">
-            <IconTruck />
-            {v.order.delivery ? t.decl.viewDelivery : t.decl.recordDelivery}
-          </Link>
-        </div>
-      </div>
-    </Card>
-  )
-}
-
 export default function Declaration() {
   const { id } = useParams()
   const v = useOrderView(id)
   if (!v) return <Empty title={t.common.orderNotFound} />
-  const { order, decl, blocking, issues } = v
+  const { order, decl } = v
   const locked = !!order.decl?.confirmedAt
   const at = (idx: number[]) => decl.lines.filter((l) => idx.includes(l.idx))
   const aps = decl.permits.find((p) => p.declarationType === 'APS')?.lines ?? []
   const drt = decl.permits.find((p) => p.declarationType === 'DRT')?.lines ?? []
-  const unrouted = decl.lines.filter((l) => !l.sgClass)
+  const routes: Route[] = [
+    { key: 'aps', tone: 'info', icon: <IconFile />, title: t.decl.aps, note: t.decl.apsNote, lines: at(aps) },
+    { key: 'statement', tone: 'accent', icon: <IconCheck />, title: t.decl.statement, note: t.decl.statementNote, lines: at(decl.statementOnly) },
+    { key: 'drt', tone: 'warn', icon: <IconShield />, title: t.decl.drt, note: t.decl.drtNote, lines: at(drt) },
+    { key: 'excluded', tone: 'neutral', icon: <IconX />, title: t.decl.excluded, note: t.decl.excludedNote, lines: at(decl.excluded) },
+  ]
+  const used = routes.filter((r) => r.lines.length)
+  const unused = routes.filter((r) => !r.lines.length)
+  const total = decl.lines.reduce((s, l) => s + lineAmount(l), 0)
+  const hasChecks = decl.rations.length > 0 || Object.keys(decl.caChecks).length > 0
 
   return (
     <>
@@ -200,99 +168,44 @@ export default function Declaration() {
           </span>
         }
         actions={
-          !locked && (
-            <button
-              className="btn primary"
-              disabled={blocking.length > 0}
-              title={blocking.length ? t.decl.clearFirst : undefined}
-              onClick={() => {
-                confirmDeclaration(order.id, decl)
-                toast(t.decl.confirmed)
-              }}
-            >
-              <IconCheck />
-              {t.decl.confirm}
+          locked && !order.delivery && (
+            <button className="btn ghost sm" onClick={() => confirm(t.decl.reopenConfirm) && reopenDeclaration(order.id)}>
+              {t.decl.reopen}
             </button>
           )
         }
       />
       <div className="stack">
-        {unrouted.length > 0 && (
-          <Notice tone="warn">
-            {t.decl.unrouted(unrouted.length)}{' '}
-            <Link to={`/orders/${order.id}`} className="strong" style={{ textDecoration: 'underline' }}>
-              {t.decl.classifyOnOrder}
-            </Link>
-          </Notice>
-        )}
-        <div className="routes">
-          <RouteCard
-            tone="info"
-            icon={<IconFile />}
-            title={t.decl.aps}
-            note={t.decl.apsNote}
-            lines={at(aps)}
-            currency={order.currency}
-          />
-          <RouteCard
-            tone="accent"
-            icon={<IconCheck />}
-            title={t.decl.statement}
-            note={t.decl.statementNote}
-            lines={at(decl.statementOnly)}
-            currency={order.currency}
-          />
-          <RouteCard
-            tone="warn"
-            icon={<IconShield />}
-            title={t.decl.drt}
-            note={t.decl.drtNote}
-            lines={at(drt)}
-            currency={order.currency}
-          />
-          <RouteCard
-            tone="neutral"
-            icon={<IconX />}
-            title={t.decl.excluded}
-            note={t.decl.excludedNote}
-            lines={at(decl.excluded)}
-            currency={order.currency}
-          />
-        </div>
-        <div className="split">
-          <div className="stack">
+        <Progress v={v} page="declaration" />
+
+        <section className="stack" style={{ gap: 10 }}>
+          <div className="section-head">
+            <h2>{t.decl.routesTitle}</h2>
+            <span className="muted small">
+              {t.common.lines(decl.lines.length)} · {t.decl.orderTotal} <strong className="num">{fmtMoney(total, order.currency)}</strong>
+            </span>
+          </div>
+          {used.length > 0 && (
+            <div className={`routes n${used.length}`}>
+              {used.map((r) => (
+                <RouteCard key={r.key} route={r} currency={order.currency} />
+              ))}
+            </div>
+          )}
+          {unused.length > 0 && (
+            <p className="small muted">
+              {t.decl.notInOrder}: {unused.map((r) => r.title).join(' · ')}
+            </p>
+          )}
+        </section>
+
+        {hasChecks && (
+          <div className={decl.rations.length && Object.keys(decl.caChecks).length ? 'grid cols-2' : 'stack'}>
             <Rations v={v} locked={locked} />
             <Approvals v={v} locked={locked} />
-            <TradenetPreview v={v} />
           </div>
-          <div className="stack">
-            {locked ? (
-              <Filing v={v} />
-            ) : (
-              <Card title={t.decl.beforeFiling} meta={blocking.length ? t.common.blocking(blocking.length) : t.decl.ready}>
-                <div className="stack">
-                  <IssueList issues={issues} />
-                  {!blocking.length && (
-                    <p className="small muted">{t.decl.freezeNote}</p>
-                  )}
-                </div>
-              </Card>
-            )}
-            <Card title={t.common.value} pad={false}>
-              <table className="table">
-                <tbody>
-                  <tr><td>{t.decl.permitLines}</td><td className="r num">{fmtMoney(sumAmount(at(decl.permitLines)), order.currency)}</td></tr>
-                  <tr><td>{t.decl.statement}</td><td className="r num">{fmtMoney(sumAmount(at(decl.statementOnly)), order.currency)}</td></tr>
-                  <tr><td>{t.decl.excluded}</td><td className="r num">{fmtMoney(sumAmount(at(decl.excluded)), order.currency)}</td></tr>
-                  <tr><td className="strong">{t.decl.orderTotal}</td><td className="r num strong">{fmtMoney(decl.lines.reduce((s, l) => s + lineAmount(l), 0), order.currency)}</td></tr>
-                </tbody>
-              </table>
-            </Card>
-            <Link to={`/orders/${order.id}`} className="btn ghost">
-              {t.decl.back} <IconArrowRight />
-            </Link>
-          </div>
-        </div>
+        )}
+        <TradenetPreview v={v} />
       </div>
     </>
   )
