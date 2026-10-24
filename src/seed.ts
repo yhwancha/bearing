@@ -76,6 +76,56 @@ Dear team, please supply the following on arrival:
 Best regards,
 Ops desk, Straits Line Agencies`
 
+/** Bonded stores inside the daily ration: one APS permit, nothing blocking. */
+const SAMPLE_BONDED = `From: ops@straitsline.demo
+Subject: MT AMBER TIDE — bonded & engine stores
+Vessel: MT AMBER TIDE
+IMO: 9702245
+Flag: Bahamas
+Type: Product tanker
+Crew: 25
+Next port: Kaohsiung (10 days)
+Location: Eastern Petroleum Anchorage
+
+Please arrange bonded supply before departure:
+
+1. WHISKY 70CL x 36 BTL
+2. RED WINE 75CL x 24 BTL
+3. BEER 330ML CASE x 20
+4. CIGARETTES 200S CTN x 40
+5. ENGINE OIL SAE40 20L x 8 PAIL
+
+Regards,
+Ops desk, Straits Line Agencies`
+
+/** Duty-paid provisions only: no permit, everything goes on the monthly statement. */
+const SAMPLE_PROVISIONS = `From: husbandry@merlion-agency.demo
+Subject: MV PACIFIC WREN provisions
+Vessel: MV PACIFIC WREN
+IMO: 9811460
+Flag: Hong Kong
+Type: Container ship
+Crew: 21
+Next port: Busan (7 days)
+Location: Keppel Terminal
+
+1. RICE JASMINE 25KG BAG x 12
+2. EGGS 30PCS x 20 TRAY
+3. DRINKING WATER 1.5L x 50 CASES
+4. INSTANT NOODLES x 15 CTN
+5. COFFEE 3IN1 x 10 BAGS
+6. MOORING ROPE PP 40MM x 1 COIL
+7. WORK GLOVES COTTON x 10 PKT`
+
+/** Sample emails offered in the new-order window, one per situation the user should see. */
+export const SAMPLES = [
+  { id: 'mixed', email: TRAP_EMAIL },
+  { id: 'bonded', email: SAMPLE_BONDED },
+  { id: 'provisions', email: SAMPLE_PROVISIONS },
+] as const
+
+export type SampleId = (typeof SAMPLES)[number]['id']
+
 const EMAIL_CORAL = `From: husbandry@merlion-agency.demo
 Subject: MT CORAL BREEZE provisions
 Vessel: MT CORAL BREEZE

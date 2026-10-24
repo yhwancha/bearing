@@ -1,18 +1,18 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { addOrder } from '../actions'
+import { t } from '../i18n'
 import { readEmail } from '../lib/read'
-import { TRAP_EMAIL } from '../seed'
+import { SAMPLES } from '../seed'
 import { useStore } from '../store'
-import { Modal, Notice, toast } from '../ui'
-import { IconSparkle } from '../ui/icons'
+import { Badge, Modal, Notice, toast } from '../ui'
+import { IconCheck, IconSparkle } from '../ui/icons'
 
-/** Paste an agency email → read vessel and lines → create the order. */
+/** Paste an agency email (or pick a sample) → read vessel and lines → create the order. */
 export default function Intake({ onClose }: { onClose: () => void }) {
   const agencies = useStore((s) => s.agencies)
   const navigate = useNavigate()
   const [text, setText] = useState('')
-  const [agencyId, setAgencyId] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -22,11 +22,11 @@ export default function Intake({ onClose }: { onClose: () => void }) {
     try {
       const out = await readEmail(text, agencies)
       if (!out.result.lines.length) {
-        setError('No order lines found. Each line needs a description and a quantity, e.g. "RICE JASMINE 25KG BAG x 10".')
+        setError(t.intake.noLines)
         return
       }
-      const id = addOrder(out.result, text, agencyId || out.result.agencyId || agencies[0]?.id || '', out.source)
-      toast(out.source === 'ai' ? `Read ${out.result.lines.length} lines` : `Read ${out.result.lines.length} lines offline (${out.fallbackReason})`)
+      const id = addOrder(out.result, text, out.result.agencyId || agencies[0]?.id || '', out.source)
+      toast(out.source === 'ai' ? t.intake.readAi(out.result.lines.length) : t.intake.readOffline(out.result.lines.length, out.fallbackReason ?? ''))
       onClose()
       navigate(`/orders/${id}`)
     } finally {
@@ -36,46 +36,61 @@ export default function Intake({ onClose }: { onClose: () => void }) {
 
   return (
     <Modal
-      title="New order"
+      title={t.intake.title}
       onClose={onClose}
       footer={
         <>
-          <button className="btn ghost" onClick={() => setText(TRAP_EMAIL)}>Use sample email</button>
           <span className="spacer" />
-          <button className="btn" onClick={onClose}>Cancel</button>
+          <button className="btn" onClick={onClose}>{t.common.cancel}</button>
           <button className="btn primary" disabled={!text.trim() || busy} onClick={submit}>
             <IconSparkle />
-            {busy ? 'Reading…' : 'Read order'}
+            {busy ? t.intake.reading : t.intake.read}
           </button>
         </>
       }
     >
       <div className="stack">
-        <p className="muted">
-          Paste the agency's email as it arrived. Bearing reads the vessel particulars and every line, then applies your rules.
-        </p>
+        <div className="stack" style={{ gap: 8 }}>
+          <div>
+            <div className="strong">{t.intake.samplesTitle}</div>
+            <p className="small muted">{t.intake.samplesHint}</p>
+          </div>
+          <div className="samples" role="radiogroup" aria-label={t.intake.samplesTitle}>
+            {SAMPLES.map((s) => {
+              const copy = t.intake.samples[s.id]
+              const on = text === s.email
+              const vessel = s.email.match(/^Vessel:\s*(.+)$/m)?.[1]
+              return (
+                <button key={s.id} type="button" role="radio" aria-checked={on} className={`sample ${on ? 'on' : ''}`} onClick={() => setText(s.email)}>
+                  <span className="sample-head">
+                    <span className="strong">{copy.title}</span>
+                    {on && <IconCheck size={14} />}
+                  </span>
+                  <span className="mono small muted">{vessel}</span>
+                  <span className="small">{copy.desc}</span>
+                  <span className="row wrap" style={{ gap: 4 }}>
+                    {copy.tags.map((tag) => (
+                      <Badge key={tag} tone="outline">{tag}</Badge>
+                    ))}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
         <label className="field">
-          <span>Email</span>
+          <span>
+            {t.intake.email} <span className="hint">· {t.intake.custom}</span>
+          </span>
           <textarea
             className="textarea mono"
-            rows={14}
+            rows={11}
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={'From: ops@agency.example\nVessel: MV …\nIMO: …\nFlag: …\nCrew: …\n\n1. RICE JASMINE 25KG BAG x 10'}
-            autoFocus
           />
         </label>
-        <label className="field">
-          <span>
-            Agency <span className="hint">· detected from the sender when left blank</span>
-          </span>
-          <select className="select" value={agencyId} onChange={(e) => setAgencyId(e.target.value)}>
-            <option value="">Detect automatically</option>
-            {agencies.map((a) => (
-              <option key={a.id} value={a.id}>{a.name}</option>
-            ))}
-          </select>
-        </label>
+        <p className="small muted">{t.intake.intro}</p>
         {error && <Notice tone="bad">{error}</Notice>}
       </div>
     </Modal>
