@@ -24,13 +24,25 @@ function load(): State {
     const raw = localStorage.getItem(KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as State
-      if (parsed.version === 1 && parsed.touched) return parsed
+      if (parsed.version === 1 && parsed.touched) return backfill(parsed, seeder())
     }
   } catch {
     // storage blocked or corrupt — start from the seed
   }
   // An untouched demo is rebuilt on each load so its dates stay relative to today
   return seeder()
+}
+
+/** Fill fields added after a workspace was saved (origin, agency UEN) from the seed, matched by id. */
+function backfill(s: State, seed: State): State {
+  const fill = <T extends { id: string }>(xs: T[], from: T[], keys: (keyof T)[]) =>
+    xs.map((x) => {
+      const src = from.find((y) => y.id === x.id)
+      if (!src) return x
+      const patch = Object.fromEntries(keys.filter((k) => x[k] === undefined && src[k] !== undefined).map((k) => [k, src[k]]))
+      return { ...x, ...patch }
+    })
+  return { ...s, products: fill(s.products, seed.products, ['origin']), agencies: fill(s.agencies, seed.agencies, ['uen']) }
 }
 
 function persist(s: State) {

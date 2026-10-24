@@ -6,28 +6,28 @@ import { splitSgDeclaration } from './sg'
 import type { Agency, Order, Product, Rule, State } from './types'
 
 export const AGENCIES: Agency[] = [
-  { id: 'ag_straits', name: 'Straits Line Agencies (Demo)', domain: 'straitsline.demo' },
-  { id: 'ag_merlion', name: 'Merlion Ship Agency (Demo)', domain: 'merlion-agency.demo' },
+  { id: 'ag_straits', name: 'Straits Line Agencies (Demo)', domain: 'straitsline.demo', uen: '2019DEMO02A' },
+  { id: 'ag_merlion', name: 'Merlion Ship Agency (Demo)', domain: 'merlion-agency.demo', uen: '2017DEMO03M' },
 ]
 
 const P = (p: Product) => p
 
 export const PRODUCTS: Product[] = [
-  P({ id: 'p_rice', sku: 'PRV-1001', name: 'Thai jasmine rice', spec: '25 kg', unit: 'BAG', hs: '1006.30', category: 'Provisions', price: 46, sgClass: 'sea_store_paid' }),
-  P({ id: 'p_eggs', sku: 'PRV-1002', name: 'Fresh eggs', spec: '30 pcs', unit: 'TRAY', hs: '0407.21', category: 'Provisions', price: 9.5, sgClass: 'sea_store_paid' }),
-  P({ id: 'p_water', sku: 'PRV-1003', name: 'Drinking water', spec: '1.5 L × 12', unit: 'CASE', hs: '2201.10', category: 'Provisions', price: 6.8, sgClass: 'sea_store_paid' }),
-  P({ id: 'p_oil', sku: 'PRV-1004', name: 'Vegetable cooking oil', spec: '18 L', unit: 'TIN', hs: '1512.19', category: 'Provisions', price: 52, sgClass: 'sea_store_paid' }),
-  P({ id: 'p_noodle', sku: 'PRV-1005', name: 'Instant noodles', spec: '30 packs', unit: 'CTN', hs: '1902.30', category: 'Provisions', price: 24, sgClass: 'sea_store_paid' }),
-  P({ id: 'p_coffee', sku: 'PRV-1006', name: 'Coffee mix 3-in-1', spec: '50 sachets', unit: 'BAG', hs: '2101.12', category: 'Provisions', price: 11, sgClass: 'sea_store_paid' }),
-  P({ id: 'p_whisky', sku: 'BND-2001', name: 'Scotch whisky', spec: '70 cl', unit: 'BTL', hs: '2208.30', category: 'Bonded', price: 38, sgClass: 'dutiable_liquor', rationKind: 'spirits', rationUnitQty: 1 }),
-  P({ id: 'p_wine', sku: 'BND-2002', name: 'Red wine', spec: '75 cl', unit: 'BTL', hs: '2204.21', category: 'Bonded', price: 16, sgClass: 'dutiable_liquor', rationKind: 'wine', rationUnitQty: 1 }),
-  P({ id: 'p_beer', sku: 'BND-2003', name: 'Lager beer', spec: '330 ml × 24 cans', unit: 'CASE', hs: '2203.00', category: 'Bonded', price: 42, sgClass: 'dutiable_liquor', rationKind: 'beer', rationUnitQty: 24 }),
-  P({ id: 'p_cig', sku: 'BND-2004', name: 'Cigarettes', spec: '200 sticks', unit: 'CTN', hs: '2402.20', category: 'Bonded', price: 31, sgClass: 'dutiable_tobacco', rationKind: 'cigarettes', rationUnitQty: 200 }),
-  P({ id: 'p_lube', sku: 'ENG-3001', name: 'Marine engine oil SAE 40', spec: '20 L', unit: 'PAIL', hs: '2710.19', category: 'Engine', price: 95, sgClass: 'sea_store_unpaid' }),
-  P({ id: 'p_rope', sku: 'DCK-4001', name: 'Polypropylene mooring rope', spec: '40 mm × 220 m', unit: 'COIL', hs: '5607.49', category: 'Deck', price: 410, sgClass: 'sea_store_paid' }),
-  P({ id: 'p_clean', sku: 'DCK-4002', name: 'Deck cleaner, alkaline', spec: '25 L', unit: 'DRUM', hs: '3402.90', category: 'Deck', price: 64, sgClass: 'sea_store_paid' }),
-  P({ id: 'p_flare', sku: 'SAF-5001', name: 'Red hand flare, SOLAS', spec: '1 pc', unit: 'PC', hs: '3604.90', category: 'Safety', price: 58, sgClass: 'controlled', controlAuthority: 'SPF Arms & Explosives' }),
-  P({ id: 'p_glove', sku: 'SAF-5002', name: 'Cotton work gloves', spec: '12 pairs', unit: 'PKT', hs: '6116.92', category: 'Safety', price: 14, sgClass: 'sea_store_paid' }),
+  P({ id: 'p_rice', sku: 'PRV-1001', name: 'Thai jasmine rice', spec: '25 kg', unit: 'BAG', hs: '1006.30', category: 'Provisions', price: 46, origin: 'TH', sgClass: 'sea_store_paid' }),
+  P({ id: 'p_eggs', sku: 'PRV-1002', name: 'Fresh eggs', spec: '30 pcs', unit: 'TRAY', hs: '0407.21', category: 'Provisions', price: 9.5, origin: 'MY', sgClass: 'sea_store_paid' }),
+  P({ id: 'p_water', sku: 'PRV-1003', name: 'Drinking water', spec: '1.5 L × 12', unit: 'CASE', hs: '2201.10', category: 'Provisions', price: 6.8, origin: 'MY', sgClass: 'sea_store_paid' }),
+  P({ id: 'p_oil', sku: 'PRV-1004', name: 'Vegetable cooking oil', spec: '18 L', unit: 'TIN', hs: '1512.19', category: 'Provisions', price: 52, origin: 'MY', sgClass: 'sea_store_paid' }),
+  P({ id: 'p_noodle', sku: 'PRV-1005', name: 'Instant noodles', spec: '30 packs', unit: 'CTN', hs: '1902.30', category: 'Provisions', price: 24, origin: 'ID', sgClass: 'sea_store_paid' }),
+  P({ id: 'p_coffee', sku: 'PRV-1006', name: 'Coffee mix 3-in-1', spec: '50 sachets', unit: 'BAG', hs: '2101.12', category: 'Provisions', price: 11, origin: 'MY', sgClass: 'sea_store_paid' }),
+  P({ id: 'p_whisky', sku: 'BND-2001', name: 'Scotch whisky', spec: '70 cl', unit: 'BTL', hs: '2208.30', category: 'Bonded', price: 38, origin: 'GB', sgClass: 'dutiable_liquor', rationKind: 'spirits', rationUnitQty: 1 }),
+  P({ id: 'p_wine', sku: 'BND-2002', name: 'Red wine', spec: '75 cl', unit: 'BTL', hs: '2204.21', category: 'Bonded', price: 16, origin: 'FR', sgClass: 'dutiable_liquor', rationKind: 'wine', rationUnitQty: 1 }),
+  P({ id: 'p_beer', sku: 'BND-2003', name: 'Lager beer', spec: '330 ml × 24 cans', unit: 'CASE', hs: '2203.00', category: 'Bonded', price: 42, origin: 'SG', sgClass: 'dutiable_liquor', rationKind: 'beer', rationUnitQty: 24 }),
+  P({ id: 'p_cig', sku: 'BND-2004', name: 'Cigarettes', spec: '200 sticks', unit: 'CTN', hs: '2402.20', category: 'Bonded', price: 31, origin: 'ID', sgClass: 'dutiable_tobacco', rationKind: 'cigarettes', rationUnitQty: 200 }),
+  P({ id: 'p_lube', sku: 'ENG-3001', name: 'Marine engine oil SAE 40', spec: '20 L', unit: 'PAIL', hs: '2710.19', category: 'Engine', price: 95, origin: 'SG', sgClass: 'sea_store_unpaid' }),
+  P({ id: 'p_rope', sku: 'DCK-4001', name: 'Polypropylene mooring rope', spec: '40 mm × 220 m', unit: 'COIL', hs: '5607.49', category: 'Deck', price: 410, origin: 'CN', sgClass: 'sea_store_paid' }),
+  P({ id: 'p_clean', sku: 'DCK-4002', name: 'Deck cleaner, alkaline', spec: '25 L', unit: 'DRUM', hs: '3402.90', category: 'Deck', price: 64, origin: 'SG', sgClass: 'sea_store_paid' }),
+  P({ id: 'p_flare', sku: 'SAF-5001', name: 'Red hand flare, SOLAS', spec: '1 pc', unit: 'PC', hs: '3604.90', category: 'Safety', price: 58, origin: 'GB', sgClass: 'controlled', controlAuthority: 'SPF Arms & Explosives' }),
+  P({ id: 'p_glove', sku: 'SAF-5002', name: 'Cotton work gloves', spec: '12 pairs', unit: 'PKT', hs: '6116.92', category: 'Safety', price: 14, origin: 'CN', sgClass: 'sea_store_paid' }),
 ]
 
 const R = (id: string, pattern: string[], productId: string): Rule => ({

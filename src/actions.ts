@@ -108,9 +108,13 @@ export function setCaCheck(orderId: string, authority: string, ok: boolean) {
   patchOrder(orderId, (o) => ({ ...o, caChecks: { ...o.caChecks, [authority]: ok } }))
 }
 
+export function setCaRef(orderId: string, authority: string, ref: string) {
+  patchOrder(orderId, (o) => ({ ...o, caRefs: { ...o.caRefs, [authority]: ref } }))
+}
+
 /** Freeze the split so later rule changes never alter what was filed. */
 export function confirmDeclaration(orderId: string, decl: SgDeclaration) {
-  patchOrder(orderId, (o) => ({ ...o, decl: { ...decl, confirmedAt: new Date().toISOString() } }))
+  patchOrder(orderId, (o) => ({ ...o, decl: { ...decl, caRefs: o.caRefs, confirmedAt: new Date().toISOString() } }))
 }
 
 export function reopenDeclaration(orderId: string) {

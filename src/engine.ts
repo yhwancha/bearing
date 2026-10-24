@@ -50,6 +50,7 @@ function fromProduct(p: Product): Partial<ResolvedLine> {
     spec: p.spec,
     unit: p.unit,
     hs: p.hs,
+    origin: p.origin,
     sgClass: p.sgClass,
     controlAuthority: p.controlAuthority,
     rationKind: p.rationKind,

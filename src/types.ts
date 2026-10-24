@@ -23,6 +23,8 @@ export interface Agency {
   name: string
   /** Mail domain, used to recognise the sender of a pasted email. */
   domain: string
+  /** Company UEN. The agency is the outward carrier agent on the permit. */
+  uen?: string
 }
 
 export interface Product {
@@ -36,6 +38,8 @@ export interface Product {
   category: string
   /** Supplier's price per unit in SGD. */
   price: number
+  /** Country of origin, ISO 3166 alpha-2 (e.g. "TH"). Required per item on the permit. */
+  origin?: string
   sgClass?: SgClass
   /** Competent Authority for controlled items, e.g. "SFA". */
   controlAuthority?: string
@@ -119,6 +123,7 @@ export interface ResolvedLine extends OrderLine {
   spec?: string
   unit?: string
   hs?: string
+  origin?: string
   sgClass?: SgClass
   controlAuthority?: string
   rationKind?: RationKind
@@ -155,6 +160,8 @@ export interface SgDeclaration {
   excluded: number[]
   /** Competent Authority → approval confirmed */
   caChecks: Record<string, boolean>
+  /** Competent Authority → licence / approval number keyed into the permit */
+  caRefs?: Record<string, string>
   rations: RationCheck[]
   messageType: 'OUT'
   permits: PermitGroup[]
@@ -187,6 +194,8 @@ export interface Order {
   decl?: SgDeclaration
   /** Competent Authority approvals ticked off while preparing. */
   caChecks?: Record<string, boolean>
+  /** Licence or approval numbers per Competent Authority. */
+  caRefs?: Record<string, string>
   delivery?: Delivery
 }
 

@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
-import { reopenDeclaration, setCaCheck, updateLineQty } from '../actions'
+import { reopenDeclaration, setCaCheck, setCaRef, updateLineQty } from '../actions'
 import type { OrderView } from '../derive'
 import { fmtMoney, fmtNum } from '../format'
 import { t } from '../i18n'
@@ -114,15 +114,29 @@ function Approvals({ v, locked }: { v: OrderView; locked: boolean }) {
         <p className="small muted">{t.decl.caNote}</p>
         {entries.map(([ca, ok]) => {
           const items = v.decl.lines.filter((l) => l.sgClass === 'controlled' && (l.controlAuthority || 'Competent Authority') === ca)
+          const ref = (locked ? v.decl.caRefs : v.order.caRefs)?.[ca] ?? ''
           return (
-            <label key={ca} className={`check ${ok ? 'on' : ''}`}>
-              <input type="checkbox" aria-label={t.decl.caConfirmed(ca)} checked={ok} disabled={locked} onChange={(e) => setCaCheck(v.order.id, ca, e.target.checked)} />
-              <div>
-                <div className="strong">{ca}</div>
-                <div className="small muted">{items.map((l) => `${l.name} × ${l.qty}`).join(', ')}</div>
-              </div>
-              <Badge tone={ok ? 'ok' : 'warn'}>{ok ? t.decl.approved : t.decl.pendingCa}</Badge>
-            </label>
+            <div key={ca} className="stack" style={{ gap: 6 }}>
+              <label className={`check ${ok ? 'on' : ''}`}>
+                <input type="checkbox" aria-label={t.decl.caConfirmed(ca)} checked={ok} disabled={locked} onChange={(e) => setCaCheck(v.order.id, ca, e.target.checked)} />
+                <div>
+                  <div className="strong">{ca}</div>
+                  <div className="small muted">{items.map((l) => `${l.name} × ${l.qty}`).join(', ')}</div>
+                </div>
+                <Badge tone={ok ? 'ok' : 'warn'}>{ok ? t.decl.approved : t.decl.pendingCa}</Badge>
+              </label>
+              <label className="row small" style={{ gap: 8 }}>
+                <span className="muted" style={{ whiteSpace: 'nowrap' }}>{t.decl.caRef}</span>
+                <input
+                  className="input mono"
+                  style={{ minHeight: 30, padding: '4px 8px' }}
+                  value={ref}
+                  disabled={locked}
+                  placeholder={t.decl.caRefPlaceholder}
+                  onChange={(e) => setCaRef(v.order.id, ca, e.target.value.toUpperCase())}
+                />
+              </label>
+            </div>
           )
         })}
       </div>

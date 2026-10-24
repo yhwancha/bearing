@@ -95,7 +95,10 @@ function ProductForm({ initial, onClose }: { initial: Product; onClose: () => vo
           <span>{t.common.unitPrice}</span>
           <input className="input num" type="number" min={0} step="0.01" value={p.price} onChange={(e) => set({ price: Number(e.target.value) })} />
         </label>
-        <div />
+        <label className="field">
+          <span>{t.common.origin}</span>
+          <input className="input mono" maxLength={2} value={p.origin ?? ''} placeholder="TH" onChange={(e) => set({ origin: e.target.value.toUpperCase() || undefined })} />
+        </label>
         <label className="field" style={{ gridColumn: 'span 3' }}>
           <span>{t.catalog.sgRoute}</span>
           <select className="select" value={p.sgClass ?? ''} onChange={(e) => setClass(e.target.value as SgClass)}>
@@ -181,7 +184,7 @@ export default function Catalog() {
                 <tr>
                   <th>{t.catalog.sku}</th>
                   <th>{t.catalog.productCol}</th>
-                  <th>{t.common.hs}</th>
+                  <th>{t.common.hs} · {t.common.originShort}</th>
                   <th>{t.common.route}</th>
                   <th>{t.catalog.rationCol}</th>
                   <th className="r">{t.catalog.price}</th>
@@ -196,7 +199,10 @@ export default function Catalog() {
                       <div className="strong">{p.name}</div>
                       <div className="small muted">{p.spec} · {p.unit} · {p.category}</div>
                     </td>
-                    <td className="mono small">{p.hs || '—'}</td>
+                    <td className="mono small">
+                      {p.hs || '—'}
+                      <div className="muted">{p.origin ?? '—'}</div>
+                    </td>
                     <td><ClassBadge value={p.sgClass} /></td>
                     <td className="small muted">
                       {p.rationKind
