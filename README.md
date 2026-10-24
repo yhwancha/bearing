@@ -15,9 +15,9 @@
 | 경로 | 세관 처리 | 베어링 출력 |
 | --- | --- | --- |
 | 세금 납부 선용품 | 허가 없음, 월간 명세서 보고 | 월간 명세서(선박별 합산) |
-| 세금 미납 선용품 | TradeNet OUT (APS), CPC `SEASTORE` | 허가 미리보기 · 엑셀 |
+| 세금 미납 선용품 | TradeNet OUT (APS), CPC `SEASTORE` | 허가 신청서(화면 · 엑셀 · 인쇄/PDF) |
 | 주류 · 담배 | APS + 승인 선박 종류 + 1인 1일 배급 한도 | 배급 게이지 · 초과 시 제출 차단 |
-| 통제 품목 | 관할 기관 승인 후 OUT (DRT) | 기관 승인 체크리스트 |
+| 통제 품목 | 관할 기관 승인 후 OUT (DRT) | 기관 승인 체크리스트 · 면허 번호를 DRT 허가에 기재 |
 | 설치용 부품 | 선용품 아님, GST 대상 | 신고서에서 제외 + 경고 |
 
 - **배급 한도**: 선원 1인 1일 담배 40개비, 잎담배 15g, 시가 3개비, 증류주·와인 0.25병, 맥주 4캔. 선원 수 × 항행 일수로 허용량을 계산하고, 넘으면 신고를 막는다.
@@ -43,7 +43,8 @@
 | 품목마다 세금·통제 여부를 판단해 경로 나누기 | 규칙과 AI 제안으로 자동 분할 |
 | 담배·주류 배급 한도를 계산기로 확인 | 실시간 게이지, 초과하면 줄일 수량까지 제시 |
 | 통제 품목의 기관 승인 챙기기 | 체크리스트, 승인 전에는 제출 불가 |
-| TradeNet 입력값 정리 | 허가 묶음별 미리보기와 엑셀 |
+| TradeNet 입력값 정리 | 허가별 신청서: TradeNet 필드 순서대로 채우고 빠진 항목은 고칠 곳까지 표시 |
+| 선장 인수 확인서 작성 | 인쇄본에 Condition A4 인수 확인서 포함 |
 | 월말 명세서 취합 | 인도 기록에서 자동 집계 |
 
 서류 담당자가 하던 반복 업무를 베어링이 맡고, 사람은 처음 보는 품목을 승인하는 일만 남는다. 승인된 판단은 규칙이 되어 다시 묻지 않는다.
@@ -55,7 +56,7 @@
 1. Orders → New order → 예시 메일 카드 "Mixed order with traps" 선택 → Read order
 2. 규칙 없는 펌프 부품: Suggest classification → "설치용이라 선용품 아님" 근거 확인 → Approve
 3. Prepare declaration: 4개 경로로 분할, 담배 12,000개비 vs 허용 4,000개비 초과 → Cut to 20 CTN
-4. 신호탄 기관 승인 체크 → Confirm declaration → TradeNet 미리보기 · Export .xlsx
+4. 신호탄 기관 승인 체크 · 면허 번호 입력 → Confirm declaration → TradeNet 허가 신청서 · Export .xlsx · Print / PDF
 5. Record delivery → Statements에 반영
 6. 같은 메일을 다시 넣으면 AI 없이 규칙만으로 바로 같은 결과 — 쓸수록 똑똑해지는 장면
 
@@ -76,7 +77,7 @@
 
 | 항목 | 지금 | 다음 |
 | --- | --- | --- |
-| TradeNet 제출 | 필드 미리보기 · 엑셀 | Module 5 Important Permit Fields로 필드 보정, 선언 대리인(declaring agent) 시스템 연동 |
+| TradeNet 제출 | 허가 신청서(헤더·당사자·출항 운송·품목, 원산지·내포장 수량·기관 면허 번호) · 엑셀 · 인쇄 | 주류 알코올 도수 등 품목별 세부 필드, 선언 대리인(declaring agent) 시스템 연동으로 직접 제출 |
 | 통제 품목 | 데모 예시(신호탄 → SPF Arms & Explosives) | 실제 통제 품목·관할 기관 목록 반영 |
 | 데이터 | 브라우저 저장 | 서버 DB, 회사·사용자 계정 |
 | 고객 검증 | 가상 공급사 데이터 | 싱가포르 공급사 파일럿 |
@@ -101,7 +102,7 @@ npm test
 | `src/engine.ts` | 규칙 매칭, 오프라인 메일 판독기 |
 | `src/heuristics.ts` | 오프라인 분류 제안 |
 | `src/i18n.ts` | 화면 문구 사전(영어·한국어), 언어 전환 |
-| `src/tradenet.ts` | TradeNet 허가 미리보기 · 엑셀 시트 |
+| `src/tradenet.ts` | TradeNet 허가 신청서 모델 · 엑셀 시트 · 인쇄본(선장 인수 확인서 포함) |
 | `src/pages/` | Overview, Orders, Order, Declaration, Delivery, Statements, Catalog, Rules |
 | `api/` | Vercel 함수: `read`(메일 판독), `propose`(분류 제안) |
 

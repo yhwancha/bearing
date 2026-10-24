@@ -37,7 +37,7 @@ Vite + React 19 + TypeScript, react-router, Vitest(엔진 단위 테스트), Ver
 | `/` | Overview — 오늘 처리할 발주, 차단 사유(배급 초과, 기관 승인 대기, 분류 필요) |
 | `/orders` | Orders — 목록 + 새 발주(메일 붙여넣기) |
 | `/orders/:id` | Order — 읽은 선박 정보·품목, 분류 상태, 분류 제안 승인 |
-| `/orders/:id/declaration` | Declaration — 경로별 카드 4개, 배급 게이지, 제출 전 점검, TradeNet 미리보기·엑셀 |
+| `/orders/:id/declaration` | Declaration — 경로별 카드 4개, 배급 게이지, 제출 전 점검, TradeNet 허가 신청서(엑셀 · 인쇄/PDF) |
 | `/orders/:id/delivery` | Delivery — 실제 인도 수량 확인 |
 | `/statements` | Monthly statement — 선박별 합계, 엑셀 |
 | `/catalog` | Catalog — 제품과 SG 분류·기관·배급 단위 |
@@ -69,5 +69,5 @@ Vite + React 19 + TypeScript, react-router, Vitest(엔진 단위 테스트), Ver
 
 ## 확인 필요
 
-- TradeNet 선용품 신고 필수 필드 전체 — Module 5 Important Permit Fields에서 확인 후 미리보기 열 보정
+- TradeNet 선용품 신고 필드 — 헤더·당사자·출항 운송·품목(원산지, 내포장 수량, 기관 면허 번호)까지 반영. 주류 알코올 도수 등 품목 세부 필드는 Module 5 Important Permit Fields로 추가 확인
 - 데모용 통제 품목·담당 기관 — 실제 통제 목록에서 고르기 전까지 가상 예시로 표시
