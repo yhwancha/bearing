@@ -126,6 +126,12 @@ export interface RationCheck {
 
 export type DeclarationType = 'APS' | 'DRT'
 
+/** One TradeNet permit to file. Sea stores go on APS; controlled duty-paid stores on a separate DRT. */
+export interface PermitGroup {
+  declarationType: DeclarationType
+  lines: number[]
+}
+
 /** The Singapore filing split for one order, frozen when the user confirms it. */
 export interface SgDeclaration {
   lines: ResolvedLine[]
@@ -139,7 +145,7 @@ export interface SgDeclaration {
   caChecks: Record<string, boolean>
   rations: RationCheck[]
   messageType: 'OUT'
-  declarationType: DeclarationType
+  permits: PermitGroup[]
   confirmedAt?: string
   tradenetPermitNo?: string
 }
