@@ -731,3 +731,63 @@ code,
   color: var(--ink);
   box-shadow: var(--shadow-sm);
 }
+
+/* ---------- Pages ---------- */
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .split { grid-template-columns: 1fr; }
+}
+
+.table tfoot td {
+  padding: 11px 14px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.issues {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.issues li {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-size: 13px;
+}
+
+.issues li svg { flex: none; margin-top: 2px; }
+.issues li.block svg { color: var(--bad); }
+.issues li.warn svg { color: var(--warn); }
+
+.email {
+  margin: 0;
+  padding: 16px 18px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  color: var(--ink-2);
+  max-height: 360px;
+  overflow: auto;
+}
+
+fieldset:disabled .input,
+fieldset:disabled .select {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.table td.r,
+.table th.r { white-space: nowrap; }

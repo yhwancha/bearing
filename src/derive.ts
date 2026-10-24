@@ -1,0 +1,50 @@
+/* Derived views over the stored state. Recomputed on render; nothing here is persisted. */
+
+import { resolveLines } from './engine'
+import { sgPreflight, splitSgDeclaration, type Issue } from './sg'
+import type { Order, OrderStatus, ResolvedLine, SgDeclaration, State } from './types'
+
+export interface OrderView {
+  order: Order
+  lines: ResolvedLine[]
+  decl: SgDeclaration
+  issues: Issue[]
+  blocking: Issue[]
+  status: OrderStatus
+}
+
+export function viewOrder(s: State, order: Order): OrderView {
+  // A confirmed declaration is frozen: later rule changes never alter what was filed
+  const lines = order.decl?.confirmedAt ? order.decl.lines : resolveLines(order.lines, order.agencyId, s.rules, s.products, s.proposals)
+  const decl = order.decl?.confirmedAt ? order.decl : splitSgDeclaration(lines, order.vessel, order.caChecks)
+  const issues = order.decl?.confirmedAt ? [] : sgPreflight(decl, order.vessel)
+  const blocking = issues.filter((i) => i.level === 'block')
+  const status: OrderStatus = order.delivery
+    ? 'delivered'
+    : order.decl?.confirmedAt
+      ? 'filed'
+      : blocking.length
+        ? 'review'
+        : 'ready'
+  return { order, lines, decl, issues, blocking, status }
+}
+
+export const STATUS_INFO: Record<OrderStatus, { label: string; tone: 'ok' | 'warn' | 'bad' | 'info' | 'accent' | 'neutral' }> = {
+  new: { label: 'New', tone: 'info' },
+  review: { label: 'Needs attention', tone: 'warn' },
+  ready: { label: 'Ready to file', tone: 'accent' },
+  filed: { label: 'Filed', tone: 'info' },
+  delivered: { label: 'Delivered', tone: 'ok' },
+}
+
+/** Short labels for the blockers that matter most in a list. */
+export function headline(v: OrderView): { label: string; tone: 'bad' | 'warn' }[] {
+  const out: { label: string; tone: 'bad' | 'warn' }[] = []
+  const codes = new Set(v.blocking.map((i) => i.code))
+  if (codes.has('unclassified') || codes.has('pending')) out.push({ label: 'Classification needed', tone: 'warn' })
+  if ([...codes].some((c) => c.startsWith('ration_') && c !== 'ration_kind')) out.push({ label: 'Ration exceeded', tone: 'bad' })
+  if (codes.has('ca')) out.push({ label: 'Approval pending', tone: 'warn' })
+  if (codes.has('vessel_not_approved')) out.push({ label: 'Vessel not approved', tone: 'bad' })
+  if (codes.has('flag') || codes.has('vessel_type') || codes.has('crew_days') || codes.has('vessel_name')) out.push({ label: 'Vessel details missing', tone: 'warn' })
+  return out
+}
