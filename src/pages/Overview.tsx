@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fmtMoney, fmtMonth, monthOf } from '../format'
 import { monthlyStatement } from '../sg'
-import { useStore } from '../store'
-import { Card, PageHead, Stat } from '../ui'
-import { IconArrowRight, IconPlus } from '../ui/icons'
+import { resetDemo, useStore } from '../store'
+import { Card, PageHead, Stat, toast } from '../ui'
+import { IconArrowRight, IconPlus, IconReset } from '../ui/icons'
 import Intake from './Intake'
 import { OrderTable, useOrderViews } from './Orders'
 
@@ -23,10 +23,24 @@ export default function Overview() {
         title="Overview"
         sub={workspace.name}
         actions={
-          <button className="btn primary" onClick={() => setIntake(true)}>
-            <IconPlus />
-            New order
-          </button>
+          <>
+            <button
+              className="btn ghost"
+              onClick={() => {
+                if (confirm('Reset the demo workspace? Your changes will be lost.')) {
+                  resetDemo()
+                  toast('Demo reset')
+                }
+              }}
+            >
+              <IconReset />
+              Reset demo
+            </button>
+            <button className="btn primary" onClick={() => setIntake(true)}>
+              <IconPlus />
+              New order
+            </button>
+          </>
         }
       />
       <div className="stack">
