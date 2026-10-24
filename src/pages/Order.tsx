@@ -1,14 +1,16 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { deleteOrder, updateVessel } from '../actions'
+import { addProposals, deleteOrder, updateVessel } from '../actions'
 import { headline, STATUS_INFO, viewOrder, type OrderView } from '../derive'
 import { fmtDateTime, fmtMoney } from '../format'
+import { proposeFor } from '../lib/propose'
 import { lineAmount, sumAmount, VESSEL_TYPE_LABEL, type Issue } from '../sg'
 import { useStore } from '../store'
 import type { ResolvedLine, VesselInfo, VesselType } from '../types'
-import { Badge, Card, Empty, Flag, Notice, PageHead } from '../ui'
-import { IconAlert, IconArrowRight, IconCheck, IconShip, IconTrash } from '../ui/icons'
+import { Badge, Card, Empty, Flag, Notice, PageHead, toast } from '../ui'
+import { IconAlert, IconArrowRight, IconCheck, IconShip, IconSparkle, IconTrash } from '../ui/icons'
 import { ClassBadge } from '../ui/sg'
+import ProposalCard from './ProposalCard'
 
 export function useOrderView(id: string | undefined): OrderView | undefined {
   const state = useStore((s) => s)
@@ -148,6 +150,54 @@ export function IssueList({ issues }: { issues: Issue[] }) {
   )
 }
 
+/** Lines without a rule: ask for suggestions, then approve them one by one. */
+function Classify({ v }: { v: OrderView }) {
+  const products = useStore((s) => s.products)
+  const proposals = useStore((s) => s.proposals)
+  const [busy, setBusy] = useState(false)
+  const unknown = v.lines.filter((l) => l.state === 'unknown')
+  const pending = proposals.filter((p) => p.status === 'pending' && p.orderId === v.order.id && v.lines.some((l) => l.proposalId === p.id))
+  if (!unknown.length && !pending.length) return null
+
+  async function suggest() {
+    setBusy(true)
+    try {
+      const out = await proposeFor(v.order, unknown, products)
+      addProposals(out.proposals)
+      if (out.source === 'heuristic') toast(`${out.fallbackReason ?? 'Offline suggestions'} — review before approving`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Card
+      title={<div className="row"><IconSparkle /><h2>Classification</h2></div>}
+      meta={unknown.length ? `${unknown.length} line${unknown.length > 1 ? 's' : ''} without a rule` : `${pending.length} to approve`}
+      actions={
+        unknown.length ? (
+          <button className="btn sm primary" onClick={suggest} disabled={busy}>
+            <IconSparkle size={14} />
+            {busy ? 'Thinking…' : 'Suggest classification'}
+          </button>
+        ) : undefined
+      }
+    >
+      <div className="stack">
+        {unknown.length > 0 && !pending.length && (
+          <p className="muted">
+            Bearing has no rule for {unknown.map((l) => <code key={l.idx}>{l.desc}</code>).reduce<ReactNode[]>((a, c, i) => (i ? [...a, ', ', c] : [c]), [])}.
+            Get a suggested route with its reasoning, then approve it once.
+          </p>
+        )}
+        {pending.map((p) => (
+          <ProposalCard key={p.id} proposal={p} />
+        ))}
+      </div>
+    </Card>
+  )
+}
+
 export default function OrderPage() {
   const { id } = useParams()
   const v = useOrderView(id)
@@ -201,6 +251,7 @@ export default function OrderPage() {
           {o.readSource === 'heuristic' && !filed && (
             <Notice>Read with the offline reader. Check the vessel details and lines against the email.</Notice>
           )}
+          {!filed && <Classify v={v} />}
           <Card title="Lines" meta={`${o.lines.length} lines · ${fmtMoney(sumAmount(v.lines), o.currency)}`} pad={false}>
             <LinesTable lines={v.lines} currency={o.currency} />
           </Card>

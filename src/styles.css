@@ -791,3 +791,54 @@ fieldset:disabled .select {
 
 .table td.r,
 .table th.r { white-space: nowrap; }
+
+.proposal {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--surface);
+}
+
+.proposal-why {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--violet-soft);
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.proposal footer {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.token {
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.search {
+  position: relative;
+  width: min(320px, 100%);
+}
+
+.search svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+}
+
+.search .input {
+  padding-left: 32px;
+}

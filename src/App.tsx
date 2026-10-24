@@ -4,6 +4,7 @@ import { viewOrder } from './derive'
 import Order from './pages/Order'
 import Orders from './pages/Orders'
 import Overview from './pages/Overview'
+import Rules from './pages/Rules'
 import Shell from './Shell'
 import { useStore } from './store'
 import { PageHead } from './ui'
@@ -23,7 +24,7 @@ export default function App() {
         <Route path="/orders/:id" element={<Order />} />
         <Route path="/statements" element={<Placeholder title="Statements" />} />
         <Route path="/catalog" element={<Placeholder title="Catalog" />} />
-        <Route path="/rules" element={<Placeholder title="Rules" />} />
+        <Route path="/rules" element={<Rules />} />
       </Routes>
     </Shell>
   )
