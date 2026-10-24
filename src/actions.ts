@@ -3,7 +3,7 @@
 import type { ReadResult } from './engine'
 import { uid } from './format'
 import { update } from './store'
-import type { Order, Product, Proposal, Rule, SgDeclaration, VesselInfo } from './types'
+import type { Delivery, Order, Product, Proposal, Rule, SgDeclaration, VesselInfo } from './types'
 
 function patchOrder(id: string, fn: (o: Order) => Order) {
   update((s) => ({ ...s, orders: s.orders.map((o) => (o.id === id ? fn(o) : o)) }))
@@ -119,4 +119,14 @@ export function reopenDeclaration(orderId: string) {
 
 export function recordPermit(orderId: string, permitNo: string) {
   patchOrder(orderId, (o) => (o.decl ? { ...o, decl: { ...o.decl, tradenetPermitNo: permitNo.trim() || undefined } } : o))
+}
+
+/* ---------- Delivery ---------- */
+
+export function recordDelivery(orderId: string, delivery: Delivery) {
+  patchOrder(orderId, (o) => ({ ...o, delivery }))
+}
+
+export function clearDelivery(orderId: string) {
+  patchOrder(orderId, (o) => ({ ...o, delivery: undefined }))
 }

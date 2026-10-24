@@ -969,3 +969,10 @@ fieldset:disabled .select {
 
 .missing { color: var(--bad); font-weight: 500; }
 .tradenet-foot { padding: 12px 18px; border-top: 1px solid var(--line); }
+
+.workspace .name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
