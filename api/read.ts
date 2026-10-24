@@ -15,7 +15,7 @@ const SCHEMA = {
     vessel: {
       type: 'object',
       additionalProperties: false,
-      required: ['name', 'imo', 'flag', 'type', 'crew', 'voyageDays', 'location', 'eta'],
+      required: ['name', 'imo', 'flag', 'type', 'crew', 'voyageDays', 'location', 'eta', 'nrt', 'voyageNo', 'departure', 'nextPort', 'finalPort'],
       properties: {
         name: { type: 'string', description: 'Vessel name in upper case with its prefix, e.g. "MV OCEAN LYRA".' },
         imo: { type: 'string', description: '7-digit IMO number or "".' },
@@ -25,6 +25,11 @@ const SCHEMA = {
         voyageDays: { type: 'integer', description: 'Days to the next port, 0 if not stated.' },
         location: { type: 'string', description: 'Berth or anchorage in the Port of Singapore, or "".' },
         eta: { type: 'string', description: 'ETA as written, or "".' },
+        nrt: { type: 'integer', description: 'Net registered tonnage (NRT), 0 if not stated.' },
+        voyageNo: { type: 'string', description: 'Outward voyage number as written, or "".' },
+        departure: { type: 'string', description: 'Departure date/time (ETD) as written, or "".' },
+        nextPort: { type: 'string', description: 'Next port of call, port name only, or "".' },
+        finalPort: { type: 'string', description: 'Final port of call, port name only, or "".' },
       },
     },
     lines: {

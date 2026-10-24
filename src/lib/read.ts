@@ -15,7 +15,7 @@ export interface ReadOutcome {
 interface ApiRead {
   subject: string
   agencyId: string
-  vessel: { name: string; imo: string; flag: string; type: string; crew: number; voyageDays: number; location: string; eta: string }
+  vessel: { name: string; imo: string; flag: string; type: string; crew: number; voyageDays: number; location: string; eta: string; nrt: number; voyageNo: string; departure: string; nextPort: string; finalPort: string }
   lines: { raw: string; desc: string; qty: number; orderUnit: string; code: string }[]
 }
 
@@ -40,6 +40,11 @@ export async function readEmail(text: string, agencies: Agency[]): Promise<ReadO
           voyageDays: orUndef(r.vessel.voyageDays),
           location: orUndef(r.vessel.location),
           eta: orUndef(r.vessel.eta),
+          nrt: orUndef(r.vessel.nrt),
+          voyageNo: orUndef(r.vessel.voyageNo),
+          departure: orUndef(r.vessel.departure),
+          nextPort: orUndef(r.vessel.nextPort),
+          finalPort: orUndef(r.vessel.finalPort),
         },
         lines: lines.map((l, i) => ({ idx: i + 1, raw: l.raw, desc: l.desc.toUpperCase(), qty: l.qty, orderUnit: l.orderUnit.toUpperCase() || 'UNIT', code: l.code || undefined })),
       },

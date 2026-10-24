@@ -122,6 +122,26 @@ export function VesselCard({ orderId, vessel, locked }: { orderId: string; vesse
             <span>{t.order.voyageDays}</span>
             <input className="input num" type="number" min={0} value={vessel.voyageDays ?? ''} onChange={(e) => set({ voyageDays: num(e.target.value) })} />
           </label>
+          <label className="field">
+            <span>{t.order.nrt}</span>
+            <input className="input num" type="number" min={0} value={vessel.nrt ?? ''} onChange={(e) => set({ nrt: num(e.target.value) })} />
+          </label>
+          <label className="field">
+            <span>{t.order.voyageNo}</span>
+            <input className="input mono" value={vessel.voyageNo ?? ''} onChange={(e) => set({ voyageNo: e.target.value.toUpperCase() || undefined })} />
+          </label>
+          <label className="field">
+            <span>{t.order.nextPort}</span>
+            <input className="input" value={vessel.nextPort ?? ''} onChange={(e) => set({ nextPort: e.target.value || undefined })} />
+          </label>
+          <label className="field">
+            <span>{t.order.finalPort}</span>
+            <input className="input" value={vessel.finalPort ?? ''} onChange={(e) => set({ finalPort: e.target.value || undefined })} />
+          </label>
+          <label className="field" style={{ gridColumn: 'span 2' }}>
+            <span>{t.order.departure}</span>
+            <input className="input" value={vessel.departure ?? ''} placeholder="27 Oct 18:00" onChange={(e) => set({ departure: e.target.value || undefined })} />
+          </label>
         </div>
       </fieldset>
     </Card>

@@ -59,9 +59,13 @@ Vessel: MV OCEAN LYRA
 IMO: 9734512
 Flag: Liberia
 Type: Bulk carrier
+NRT: 18,450
+Voyage No: OL-2611
 Crew: 20
 ETA: 26 Oct 08:00
+ETD: 27 Oct 18:00
 Next port: Port Hedland (5 days)
+Final port: Qingdao
 Location: Western Anchorage
 
 Dear team, please supply the following on arrival:
@@ -106,8 +110,12 @@ Ship's name : MV PACIFIC WREN
 IMO No.     : 9811460
 Flag state  : Hong Kong
 Ship type   : Container ship
+NRT         : 25,310
+Voyage No.  : 061N
 POB         : 21
+ETD         : 25 Oct 06:00
 Next port   : Busan, ETA in 7 days
+Final port  : Los Angeles
 
 IMPA   | DESCRIPTION                 | UNIT | QTY
 000105 | RICE JASMINE 25KG           | BAG  | 12
@@ -129,8 +137,8 @@ Date: Fri, 24 Oct 2026 06:12
 Dear Chandler,
 
 Kindly arrange the following bonded stores before departure from Eastern Petroleum Anchorage.
-Vessel: MT AMBER TIDE / product tanker / Bahamas flag / IMO 9702245
-Crew 25, voyage to Kaohsiung approx. 10 days.
+Vessel: MT AMBER TIDE / product tanker / Bahamas flag / IMO 9702245 / NRT 8,140
+Crew 25. Voyage 2643W, ETD 24 Oct 22:00, next port Kaohsiung (approx. 10 days), final port Ulsan.
 
 36 BTL  Whisky 70cl
 24 BTL  Red wine 75cl
@@ -158,8 +166,12 @@ Vessel: MT CORAL BREEZE
 IMO: 9651187
 Flag: Marshall Islands
 Type: Product tanker
+NRT: 14,280
+Voyage No: CB-0917
 Crew: 24
+ETD: 18 Oct 20:00
 Next port: Fujairah (9 days)
+Final port: Rotterdam
 Location: Eastern Petroleum Anchorage
 
 1. RICE JASMINE 25KG BAG x 8
@@ -175,8 +187,12 @@ Vessel: MV KESTREL TRADER
 IMO: 9488216
 Flag: Panama
 Type: Container ship
+NRT: 31,060
+Voyage No: 0442W
 Crew: 22
+ETD: 25 Oct 02:00
 Next port: Colombo (6 days)
+Final port: Felixstowe
 Location: Pasir Panjang Terminal
 
 1. MOORING ROPE PP 40MM x 2 COIL
@@ -191,8 +207,12 @@ Vessel: MV HARBOUR JADE
 IMO: 9590034
 Flag: Singapore
 Type: General cargo
+NRT: 4,920
+Voyage No: HJ-118
 Crew: 18
+ETD: 17 Oct 21:00
 Next port: Manila (4 days)
+Final port: Manila
 Location: Jurong Port
 
 1. RICE JASMINE 25KG BAG x 6

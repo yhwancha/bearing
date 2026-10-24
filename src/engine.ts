@@ -232,6 +232,24 @@ export function heuristicRead(text: string, agencies: Agency[]): ReadResult {
     Number(text.match(/\b(\d+)[ \t]*days?\b/i)?.[1]) ||
     undefined
   const eta = field(text, ['ETA', 'Arrival'])
+  const port = (v: string | undefined) => {
+    const p = v?.replace(/\(.*?\)/g, '').split(/[,;]/)[0].trim()
+    return p ? p.replace(/\b[a-z]/g, (c) => c.toUpperCase()) : undefined
+  }
+  const nrt = Number((field(text, ['NRT', 'N\\.R\\.T\\.', 'Net registered tonnage']) ?? text.match(/\bNRT[ \t:]*([\d,]+)/i)?.[1])?.replace(/[^\d]/g, '')) || undefined
+  const voyageNo =
+    field(text, ['Voyage No\\.?', 'Voy\\.? No\\.?', 'Voyage number'])?.split(/\s/)[0] ??
+    text.match(/\bvoy(?:age)?\.?[ \t]+(?:no\.?[ \t]*)?([A-Z0-9-]*\d[A-Z0-9-]*)\b/i)?.[1]
+  const departure = field(text, ['ETD', 'Departure', 'Date of departure']) ?? text.match(/\bETD[ \t:]+([^,.\n]+)/i)?.[1]?.trim()
+  const nextPort = port(
+    field(text, ['Next port', 'Next port of call']) ??
+      text.match(/\bnext port(?: of call)?[ \t:]+([A-Za-z][A-Za-z .'-]*?)(?=\s*[,(.;\n]|$)/im)?.[1] ??
+      text.match(/\b(?:sailing|bound|proceeding|heading)[ \t]+(?:to|for)[ \t]+([A-Za-z][A-Za-z .'-]*?)(?=\s*(?:[,(.;\n]|\d)|$)/im)?.[1],
+  )
+  const finalPort = port(
+    field(text, ['Final port', 'Final port of call', 'Last port']) ??
+      text.match(/\bfinal port(?: of call)?[ \t:]+([A-Za-z][A-Za-z .'-]*?)(?=\s*[,(.;\n]|$)/im)?.[1],
+  )
   const location =
     SG_LOCATIONS.find((l) => plain.toLowerCase().includes(l.toLowerCase())) ?? field(text, ['Location', 'Berth', 'Anchorage'])
 
@@ -254,6 +272,11 @@ export function heuristicRead(text: string, agencies: Agency[]): ReadResult {
       voyageDays: voyage,
       location,
       eta,
+      nrt,
+      voyageNo,
+      departure,
+      nextPort,
+      finalPort,
     },
     lines,
   }

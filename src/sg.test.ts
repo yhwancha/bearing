@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { checkRations, monthlyStatement, sgPreflight, splitSgDeclaration, vesselAllowsDutiable } from './sg'
 import type { Order, ResolvedLine, VesselInfo } from './types'
 
-const vessel: VesselInfo = { name: 'MV OCEAN LYRA', imo: '9734512', flag: 'Liberia', type: 'cargo', crew: 20, voyageDays: 5 }
+const vessel: VesselInfo = {
+  name: 'MV OCEAN LYRA', imo: '9734512', flag: 'Liberia', type: 'cargo', crew: 20, voyageDays: 5,
+  nrt: 18450, voyageNo: 'OL-2611', departure: '27 Oct 18:00', nextPort: 'Port Hedland', finalPort: 'Qingdao',
+}
 
 const line = (idx: number, desc: string, qty: number, extra: Partial<ResolvedLine>): ResolvedLine => ({
   idx, raw: desc, desc, qty, orderUnit: 'PC', state: 'rule', ...extra,
@@ -59,6 +62,12 @@ describe('sgPreflight', () => {
     const issues = sgPreflight(splitSgDeclaration(demo, vessel), vessel)
     expect(issues.filter((i) => i.level === 'block').map((i) => i.code)).toEqual(['ration_cigarettes', 'ca'])
     expect(issues.find((i) => i.code === 'install')?.level).toBe('warn')
+  })
+
+  it('requires the sea-stores permit particulars when a permit is needed', () => {
+    const bare = { ...vessel, nrt: undefined, nextPort: undefined, finalPort: undefined, voyageNo: undefined }
+    const codes = sgPreflight(splitSgDeclaration(demo, bare), bare).map((i) => `${i.level}:${i.code}`)
+    expect(codes).toEqual(expect.arrayContaining(['block:nrt', 'block:next_port', 'block:final_port', 'warn:voyage_no']))
   })
   it('blocks dutiable stores on an unknown or unapproved vessel type', () => {
     const v = { ...vessel, type: undefined }

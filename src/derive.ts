@@ -50,7 +50,7 @@ export function headline(v: OrderView): { label: string; tone: 'bad' | 'warn' }[
   if ([...codes].some((c) => c.startsWith('ration_') && c !== 'ration_kind')) out.push({ label: t.headline.ration, tone: 'bad' })
   if (codes.has('ca')) out.push({ label: t.headline.approval, tone: 'warn' })
   if (codes.has('vessel_not_approved')) out.push({ label: t.headline.vesselNotApproved, tone: 'bad' })
-  if (codes.has('flag') || codes.has('vessel_type') || codes.has('crew_days') || codes.has('vessel_name')) out.push({ label: t.headline.vesselMissing, tone: 'warn' })
+  if (['flag', 'vessel_type', 'crew_days', 'vessel_name', 'nrt', 'next_port', 'final_port'].some((c) => codes.has(c))) out.push({ label: t.headline.vesselMissing, tone: 'warn' })
   return out
 }
 

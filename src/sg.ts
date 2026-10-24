@@ -150,6 +150,15 @@ export function sgPreflight(decl: SgDeclaration, v: VesselInfo): Issue[] {
   const unapproved = Object.entries(decl.caChecks).filter(([, ok]) => !ok).map(([ca]) => ca)
   if (unapproved.length) issues.push({ level: 'block', code: 'ca', message: t.issue.ca(unapproved.join(', ')) })
 
+  if (decl.permits.length) {
+    // Particulars Singapore Customs requires on every sea-stores permit
+    if (!v.nrt) issues.push({ level: 'block', code: 'nrt', message: t.issue.nrt })
+    if (!v.nextPort) issues.push({ level: 'block', code: 'next_port', message: t.issue.nextPort })
+    if (!v.finalPort) issues.push({ level: 'block', code: 'final_port', message: t.issue.finalPort })
+    if (!v.voyageNo) issues.push({ level: 'warn', code: 'voyage_no', message: t.issue.voyageNo })
+    if (!v.departure) issues.push({ level: 'warn', code: 'departure', message: t.issue.departure })
+  }
+
   if (decl.excluded.length) issues.push({ level: 'warn', code: 'install', message: t.issue.install(decl.excluded.length), lines: decl.excluded })
   if (!v.imo) issues.push({ level: 'warn', code: 'imo', message: t.issue.imo })
   return issues

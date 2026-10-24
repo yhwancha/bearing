@@ -84,6 +84,16 @@ export interface VesselInfo {
   /** Berth or anchorage, e.g. "Western Anchorage". */
   location?: string
   eta?: string
+  /** Net registered tonnage. Required on a sea-stores permit. */
+  nrt?: number
+  /** Outward voyage number (TradeNet "outward conveyance reference number"). */
+  voyageNo?: string
+  /** Date and time of departure as written, e.g. "27 Oct 18:00". */
+  departure?: string
+  /** Required on a sea-stores permit. */
+  nextPort?: string
+  /** Required on a sea-stores permit. */
+  finalPort?: string
 }
 
 export interface OrderLine {
