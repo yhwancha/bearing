@@ -52,14 +52,18 @@
 
 ## 시연 (3분)
 
-1. Orders → New order → Use sample email → Read order
+1. Orders → New order → 예시 메일 카드 "Mixed order with traps" 선택 → Read order
 2. 규칙 없는 펌프 부품: Suggest classification → "설치용이라 선용품 아님" 근거 확인 → Approve
 3. Prepare declaration: 4개 경로로 분할, 담배 12,000개비 vs 허용 4,000개비 초과 → Cut to 20 CTN
 4. 신호탄 기관 승인 체크 → Confirm declaration → TradeNet 미리보기 · Export .xlsx
 5. Record delivery → Statements에 반영
 6. 같은 메일을 다시 넣으면 AI 없이 규칙만으로 바로 같은 결과 — 쓸수록 똑똑해지는 장면
 
+다른 예시 카드: "Bonded stores, within ration"(APS 허가 한 건, 바로 신고 가능), "Provisions only"(허가 없이 월간 명세서).
+
 처음 상태로 되돌리기: Overview → Reset demo
+
+화면 언어는 상단 바의 EN / 한으로 바꾼다. 세관에 내는 TradeNet 시트와 월간 명세서 엑셀은 언어와 관계없이 영어로 나간다.
 
 ## 싱가포르 현장 적용까지 남은 일
 
@@ -89,6 +93,7 @@ npm test
 | `src/sg.ts` | 싱가포르 규칙: 배급 한도, 승인 선박, 경로 분할, 제출 전 점검, 월간 명세서 |
 | `src/engine.ts` | 규칙 매칭, 오프라인 메일 판독기 |
 | `src/heuristics.ts` | 오프라인 분류 제안 |
+| `src/i18n.ts` | 화면 문구 사전(영어·한국어), 언어 전환 |
 | `src/tradenet.ts` | TradeNet 허가 미리보기 · 엑셀 시트 |
 | `src/pages/` | Overview, Orders, Order, Declaration, Delivery, Statements, Catalog, Rules |
 | `api/` | Vercel 함수: `read`(메일 판독), `propose`(분류 제안) |
