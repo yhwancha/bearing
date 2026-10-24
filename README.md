@@ -22,7 +22,7 @@
 
 - **배급 한도**: 선원 1인 1일 담배 40개비, 잎담배 15g, 시가 3개비, 증류주·와인 0.25병, 맥주 4캔. 선원 수 × 항행 일수로 허용량을 계산하고, 넘으면 신고를 막는다.
 - **승인 선박**: 여객선·화물선·석유 시추선·준설선·어선·보급선·예인선만 주류·담배를 받을 수 있다. 선종이 없거나 해당하지 않으면 막는다.
-- **필수 항목**: 선박 국적, IMO, 정박지(싱가포르 묘박지·터미널 이름 인식)가 비면 제출 전에 알려 준다.
+- **필수 항목**: 허가가 필요한 발주는 선박 국적, 선종, 순톤수(NRT), 다음·최종 기항지, 품목별 HS 코드·원산지가 비면 막는다. 항차·출항 일시·IMO는 경고한다.
 - **월간 명세서**: 허가 없이 공급한 세금 납부 선용품을 실제 인도 수량으로 선박별 합산한다.
 
 ### 2. 쓸수록 똑똑해지는 AI 비서
@@ -51,27 +51,133 @@
 
 **믿을 수 있게 설계했다.** AI는 읽기와 분류 제안만 한다. 경로 분할, 한도 계산, 금액은 정해진 코드(`src/engine.ts`, `src/sg.ts`)가 하고, 수량은 원문에서 그대로 옮기며 AI가 숫자를 만들지 않는다. 같은 발주는 늘 같은 신고서가 되고, 확정한 신고서는 고정되어 나중에 규칙이 바뀌어도 달라지지 않는다.
 
-## 시연 (3분)
+## 실제 동작 예시
 
-1. Orders → New order → 예시 메일 카드 "Mixed order with traps" 선택 → Read order
-2. 규칙 없는 펌프 부품: Suggest classification → "설치용이라 선용품 아님" 근거 확인 → Approve
-3. Prepare declaration: 4개 경로로 분할, 담배 12,000개비 vs 허용 4,000개비 초과 → Cut to 20 CTN
-4. 신호탄 기관 승인 체크 · 면허 번호 입력 → Confirm declaration → TradeNet 허가 신청서 · Export .xlsx · Print / PDF
-5. Record delivery → Statements에 반영
-6. 같은 메일을 다시 넣으면 AI 없이 규칙만으로 바로 같은 결과 — 쓸수록 똑똑해지는 장면
+아래 입력과 결과는 모두 지금 코드가 내는 값이다. AI 키 없이(오프라인 판독기) 돌린 결과이고, 키가 있으면 같은 자리를 Claude가 읽는다.
 
-예시 카드는 실제로 오는 발주 메일 네 가지 양식이다. 오프라인 판독기도 모두 읽는다.
+### 예시 1. 함정이 섞인 발주 — 메일 한 통이 허가 두 건과 명세서로 갈라진다
 
-| 카드 | 양식 | 보여 주는 것 |
+대리점 메일(New order → "Mixed order with traps"):
+
+```text
+Vessel: MV OCEAN LYRA        IMO: 9734512      Flag: Liberia
+Type: Bulk carrier           NRT: 18,450       Voyage No: OL-2611
+Crew: 20                     ETD: 27 Oct 18:00
+Next port: Port Hedland (5 days)   Final port: Qingdao
+Location: Western Anchorage
+
+1. RICE JASMINE 25KG BAG x 10
+2. WHISKY 70CL x 24 BTL
+3. CIGARETTES 200S CTN x 60
+4. PUMP IMPELLER FOR INSTALLATION x 1
+5. RED HAND FLARES SOLAS x 6 PCS
+6. EGGS FRESH 30PCS TRAY x 12
+```
+
+**① 읽기.** 선박 정보 13개 항목과 6줄을 옮긴다. "Bulk carrier"는 화물선(cargo), "Port Hedland (5 days)"는 다음 기항지와 항해 5일로 나뉜다. 대리점은 보낸 주소(`straitsline.demo`)로 알아본다.
+
+**② 분류.** 규칙 라이브러리가 5줄을 바로 제품에 연결한다. 처음 보는 4번만 남고, 분류 제안을 누르면 이렇게 나온다.
+
+> 설치용 부품(ship_spare_install) — "발주에 선박 설치용이라고 적혀 있어 선용품이 아니며 GST가 부과됩니다."
+
+승인하면 규칙이 되어, 같은 표현은 다음부터 AI 없이 처리된다.
+
+**③ 경로 분할.**
+
+| 줄 | 품목 | 경로 | 서류 |
+| --- | --- | --- | --- |
+| 1, 6 | 쌀, 계란 | 세금 납부 선용품 | 월간 명세서 |
+| 2, 3 | 위스키, 담배 | 과세 주류·담배 | TradeNet OUT (APS) |
+| 5 | 신호탄 | 통제 품목(SPF Arms & Explosives) | 기관 승인 → TradeNet OUT (DRT) |
+| 4 | 펌프 임펠러 | 설치용 부품 | 신고서에서 제외, GST 경고 |
+
+**④ 제출 전 점검.** 세 가지가 신고를 막는다.
+
+- 궐련 담배: 요청 12,000개비, 허용 4,000개비 (선원 20명 × 5일 × 40) → Cut to 20 CTN 버튼 한 번으로 해결
+- 위스키는 24병 / 허용 25병으로 통과
+- 기관 승인 미확인: SPF Arms & Explosives → 승인 카드에서 체크하고 면허 번호(예: `AE-2026-0142`) 입력
+
+**⑤ TradeNet 허가 신청서.** 확정하면 허가별로 이렇게 채워진다(엑셀 시트 그대로).
+
+| TradeNet 필드 | OUT (APS) | OUT (DRT) |
 | --- | --- | --- |
-| Mixed order with traps | 번호 목록 | 경로 4개, 배급 초과, 기관 승인, AI 분류 제안 |
-| Quick note in shorthand | 메신저체, 단위 생략("water 30", "smokes 8 ctn"), 선박 정보가 한 문장 | 단위는 제품에서 채움, 은어 분류, 선종 확인 |
-| Master's requisition with IMPA codes | IMPA 코드 표, 선장 청구서 전달 | 허가 없이 월간 명세서 |
-| Bonded stores from the master | 전달 메일, 수량이 품명 앞 | 배급 한도 이내, APS 허가 한 건 바로 신고 |
+| CPC / Processing Code 1·2 | SEASTORE / 20 / 5 | SEASTORE / 20 / 5 |
+| Exporter / UEN | Lion Gate Ship Supply (Demo) / 2026DEMO01K | 같음 |
+| Outward Carrier Agent / UEN | Straits Line Agencies (Demo) / 2019DEMO02A | 같음 |
+| Vessel · Voyage · NRT | MV OCEAN LYRA · OL-2611 · 18450 | 같음 |
+| Next / Final Port of Call | Port Hedland / Qingdao | 같음 |
+| 품목 | 위스키 24 BTL → 16.8 LTR, 2208.30, GB<br>담배 20 CTN → 4,000 STK, 2402.20, ID | 신호탄 6 PC, 3604.90, GB, 면허 AE-2026-0142 |
+| Total Value | SGD 1,532.00 | SGD 348.00 |
 
-처음 상태로 되돌리기: Overview → Reset demo
+빈 필수 칸이 있으면 "필수 항목 N개 누락" 배지와 함께 고칠 곳(선박 정보 · 카탈로그 · 승인 카드)을 가리키고, 엑셀에는 `MISSING`으로 찍힌다. 인쇄 / PDF를 누르면 A4 신청서 두 장과 선장 인수 확인서(Condition A4, 포장 수량 자동 기재)가 나온다.
 
-화면 언어는 상단 바의 EN / 한으로 바꾼다. 세관에 내는 TradeNet 시트와 월간 명세서 엑셀은 언어와 관계없이 영어로 나간다.
+**⑥ 인도와 명세서.** Record delivery에서 실제 인도 수량을 적으면 쌀·계란이 그 달 Statements에 선박별로 합산된다.
+
+### 예시 2. 메신저체 약식 메일 — 빠진 정보를 정확히 짚는다
+
+```text
+hi team, mv sea heron (panama, imo 9614402) at western anch, eta 1400 today.
+20 crew, sailing to manila 4 days. pls send asap:
+
+water 30
+eggs 10
+rice 5 bag
+coffee 3in1 6
+beer 10 cs
+smokes 8 ctn
+```
+
+- 문장 하나에서 선명 MV SEA HERON, 국적 Panama, IMO, Western Anchorage, 선원 20명, 다음 기항지 Manila, 항해 4일을 뽑는다.
+- 단위 없는 "water 30"은 제품에서 단위를 채워 Drinking water 30 CASE가 된다. "cs"는 CASE로 읽는다.
+- "smokes"는 처음 보는 은어라 분류 제안으로 넘어가고, 담배(1일 40개비 한도)로 제안된다.
+- 맥주 10 CASE = 240캔, 허용 320캔(20명 × 4일 × 4)으로 통과.
+- 막는 것: 미분류 2줄, 선종 없음(주류·담배 공급 가능 여부를 판단 못 함), NRT 없음, 최종 기항지 없음. 항차·출항 일시는 경고만 한다. 발주 화면의 선박 카드에서 채우면 풀린다.
+
+### 예시 3. IMPA 코드 표로 온 선장 청구서 — 허가 없이 끝난다
+
+```text
+IMPA   | DESCRIPTION                 | UNIT | QTY
+000105 | RICE JASMINE 25KG           | BAG  | 12
+000330 | DRINKING WATER 1.5L X 12    | CASE | 50
+210301 | MOORING ROPE PP 40MM X 220M | COIL | 1
+...
+```
+
+7줄 모두 IMPA 코드와 함께 읽고 규칙으로 바로 분류된다. 전부 세금 납부 선용품이라 TradeNet 허가가 필요 없고, 막는 항목 0개로 바로 확정 → 인도 → 월간 명세서로 간다.
+
+### 예시 4. 선장이 직접 보낸 보세품 요청 — 한도 안이면 바로 신고
+
+```text
+Vessel: MT AMBER TIDE / product tanker / Bahamas flag / IMO 9702245 / NRT 8,140
+Crew 25. Voyage 2643W, ETD 24 Oct 22:00, next port Kaohsiung (approx. 10 days), final port Ulsan.
+
+36 BTL  Whisky 70cl
+24 BTL  Red wine 75cl
+20 CASE Beer 330ml
+40 CTN  Cigarettes 200s
+8 PAIL  Engine oil SAE40 20L
+```
+
+| 품목 | 요청 | 허용 (25명 × 10일) | TradeNet 내포장 수량 |
+| --- | --- | --- | --- |
+| 위스키 | 36병 | 62.5병 | 25.2 LTR |
+| 와인 | 24병 | 62.5병 | 18 LTR |
+| 맥주 | 480캔 | 1,000캔 | 158.4 LTR |
+| 담배 | 8,000개비 | 10,000개비 | 8,000 STK |
+
+전달 메일이고 수량이 품명 앞에 있어도 5줄을 모두 읽는다. 엔진오일(세금 미납 선용품)까지 OUT (APS) 허가 한 건으로 묶이고, 막는 항목 0개라 바로 확정할 수 있다.
+
+### 3분 시연 순서
+
+1. Orders → New order → "Mixed order with traps" → Read order
+2. 펌프 부품: Suggest classification → 근거 확인 → Approve
+3. Prepare declaration → 담배 초과 → Cut to 20 CTN
+4. 신호탄 승인 체크 · 면허 번호 입력 → Confirm declaration
+5. TradeNet 허가 신청서 → Export .xlsx · Print / PDF
+6. Record delivery → Statements
+7. 같은 메일을 다시 넣으면 AI 없이 규칙만으로 같은 결과
+
+처음 상태로 되돌리기: Overview → Reset demo. 화면 언어는 상단 바의 EN / 한으로 바꾼다. 세관에 내는 TradeNet 시트·인쇄본과 월간 명세서는 언어와 관계없이 영어로 나간다.
 
 ## 싱가포르 현장 적용까지 남은 일
 
