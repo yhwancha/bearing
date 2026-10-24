@@ -2,6 +2,7 @@
 
 import { heuristicPropose, patternFor } from '../heuristics'
 import { uid } from '../format'
+import { getLang, t } from '../i18n'
 import type { Order, Product, Proposal, RationKind, ResolvedLine, Rule, SgClass } from '../types'
 import { postJson } from './api'
 
@@ -51,6 +52,7 @@ export async function proposeFor(order: Order, lines: ResolvedLine[], products: 
       lines: lines.map((l) => ({ desc: l.desc, orderUnit: l.orderUnit })),
       products: products.map(({ sku, name, spec, unit, sgClass }) => ({ sku, name, spec, unit, sgClass })),
       examples,
+      lang: getLang(),
     })
     const proposals = lines.map((l): Proposal => {
       const a = out.proposals.find((p) => p.desc === l.desc)
@@ -73,6 +75,6 @@ export async function proposeFor(order: Order, lines: ResolvedLine[], products: 
     })
     return { proposals, source: 'ai' }
   } catch (e) {
-    return { proposals: offline(order, lines, products, now), source: 'heuristic', fallbackReason: e instanceof Error ? e.message : 'AI unavailable' }
+    return { proposals: offline(order, lines, products, now), source: 'heuristic', fallbackReason: e instanceof Error ? e.message : t.api.down }
   }
 }

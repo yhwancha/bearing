@@ -2,6 +2,7 @@
 
 import { heuristicRead, type ReadResult } from '../engine'
 import type { Agency, VesselType } from '../types'
+import { t } from '../i18n'
 import { postJson } from './api'
 
 export interface ReadOutcome {
@@ -24,7 +25,7 @@ export async function readEmail(text: string, agencies: Agency[]): Promise<ReadO
   try {
     const r = await postJson<ApiRead>('/api/read', { text, agencies })
     const lines = r.lines.filter((l) => l.qty > 0 && l.desc.trim())
-    if (!lines.length) throw new Error('No lines found by AI')
+    if (!lines.length) throw new Error(t.api.noLines)
     return {
       source: 'ai',
       result: {
@@ -44,6 +45,6 @@ export async function readEmail(text: string, agencies: Agency[]): Promise<ReadO
       },
     }
   } catch (e) {
-    return { result: heuristicRead(text, agencies), source: 'heuristic', fallbackReason: e instanceof Error ? e.message : 'AI unavailable' }
+    return { result: heuristicRead(text, agencies), source: 'heuristic', fallbackReason: e instanceof Error ? e.message : t.api.down }
   }
 }

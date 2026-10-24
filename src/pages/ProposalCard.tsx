@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { approveProposal, rejectProposal } from '../actions'
-import { isDutiable, RATION_LIMITS, SG_CLASS_INFO, SG_CLASSES } from '../sg'
+import { t } from '../i18n'
+import { isDutiable, RATION_LIMITS, SG_CLASSES } from '../sg'
 import { useStore } from '../store'
 import type { Proposal, RationKind, SgClass } from '../types'
 import { Badge, toast } from '../ui'
@@ -35,7 +36,7 @@ export default function ProposalCard({ proposal }: { proposal: Proposal }) {
         <span className="spacer" />
         <Badge tone={proposal.source === 'ai' ? 'violet' : 'outline'}>
           <IconSparkle size={12} />
-          {proposal.source === 'ai' ? 'AI suggestion' : 'Offline suggestion'}
+          {proposal.source === 'ai' ? t.proposal.ai : t.proposal.offline}
         </Badge>
       </header>
 
@@ -44,89 +45,89 @@ export default function ProposalCard({ proposal }: { proposal: Proposal }) {
         <p>{proposal.rationale}</p>
       </div>
 
-      {linked && <p className="small muted">Links to catalog item <span className="mono">{linked.sku}</span>. Approving updates that product.</p>}
+      {linked && <p className="small muted">{t.proposal.linksTo} <span className="mono">{linked.sku}</span>{t.proposal.linksToAfter}</p>}
 
       <div className="grid cols-3" style={{ gap: 12 }}>
         <label className="field" style={{ gridColumn: 'span 2' }}>
-          <span>Route</span>
+          <span>{t.common.route}</span>
           <select className="select" value={d.sgClass ?? ''} onChange={(e) => setClass(e.target.value as SgClass)}>
             {SG_CLASSES.map((c) => (
-              <option key={c} value={c}>{SG_CLASS_INFO[c].label} — {SG_CLASS_INFO[c].route}</option>
+              <option key={c} value={c}>{t.sgClass[c].label} — {t.sgClass[c].route}</option>
             ))}
           </select>
         </label>
         <label className="field">
-          <span>HS code</span>
+          <span>{t.common.hsCode}</span>
           <input className="input mono" value={d.hs} placeholder="0000.00" onChange={(e) => set({ hs: e.target.value })} />
         </label>
         <label className="field">
-          <span>Declared name</span>
+          <span>{t.common.declaredName}</span>
           <input className="input" value={d.name} onChange={(e) => set({ name: e.target.value })} />
         </label>
         <label className="field">
-          <span>Pack</span>
+          <span>{t.common.pack}</span>
           <input className="input" value={d.spec} onChange={(e) => set({ spec: e.target.value })} />
         </label>
         <label className="field">
-          <span>Unit</span>
+          <span>{t.common.unit}</span>
           <input className="input" value={d.unit} onChange={(e) => set({ unit: e.target.value.toUpperCase() })} />
         </label>
         <label className="field">
-          <span>Unit price (SGD)</span>
+          <span>{t.common.unitPrice}</span>
           <input className="input num" type="number" min={0} step="0.01" value={d.price ?? ''} onChange={(e) => set({ price: e.target.value === '' ? undefined : Number(e.target.value) })} />
         </label>
         {d.sgClass === 'controlled' && (
           <label className="field" style={{ gridColumn: 'span 3' }}>
-            <span>Competent Authority</span>
-            <input className="input" value={d.controlAuthority ?? ''} placeholder="e.g. SPF Arms & Explosives" onChange={(e) => set({ controlAuthority: e.target.value })} />
+            <span>{t.common.competentAuthority}</span>
+            <input className="input" value={d.controlAuthority ?? ''} placeholder={t.common.caPlaceholder} onChange={(e) => set({ controlAuthority: e.target.value })} />
           </label>
         )}
         {isDutiable(d.sgClass) && (
           <>
             <label className="field" style={{ gridColumn: 'span 2' }}>
-              <span>Ration</span>
+              <span>{t.common.ration}</span>
               <select className="select" value={d.rationKind ?? ''} onChange={(e) => set({ rationKind: e.target.value as RationKind })}>
                 {KINDS.map((k) => (
-                  <option key={k} value={k}>{RATION_LIMITS[k].label} — {RATION_LIMITS[k].perDay} {RATION_LIMITS[k].unit} per crew per day</option>
+                  <option key={k} value={k}>{t.common.rationPerDay(t.ration[k].label, RATION_LIMITS[k].perDay, t.ration[k].unit)}</option>
                 ))}
               </select>
             </label>
             <label className="field">
-              <span>{d.rationKind ? RATION_LIMITS[d.rationKind].unit : 'Units'} per {d.unit || 'unit'}</span>
+              <span>{t.common.unitsPer(d.rationKind && t.ration[d.rationKind].unit, d.unit)}</span>
               <input className="input num" type="number" min={0} value={d.rationUnitQty ?? ''} onChange={(e) => set({ rationUnitQty: Number(e.target.value) || undefined })} />
             </label>
           </>
         )}
         <label className="field" style={{ gridColumn: 'span 2' }}>
-          <span>Match wording <span className="hint">· keywords in order</span></span>
+          <span>{t.proposal.match} <span className="hint">{t.proposal.matchHint}</span></span>
           <input className="input mono" value={pattern} onChange={(e) => setPattern(e.target.value)} />
         </label>
         <label className="field">
-          <span>Applies to</span>
+          <span>{t.proposal.appliesTo}</span>
           <select className="select" value={scope} onChange={(e) => setScope(e.target.value as 'agency' | 'all')}>
-            <option value="all">All agencies</option>
-            <option value="agency">{agency?.name ?? 'This agency'} only</option>
+            <option value="all">{t.proposal.allAgencies}</option>
+            <option value="agency">{t.proposal.onlyAgency(agency?.name)}</option>
           </select>
         </label>
       </div>
 
       <footer className="row">
-        <span className="small muted">Approved rules apply to future orders without AI.</span>
+        <span className="small muted">{t.proposal.foot}</span>
         <span className="spacer" />
         <button className="btn sm" onClick={() => rejectProposal(proposal.id)}>
           <IconX size={14} />
-          Reject
+          {t.common.reject}
         </button>
         <button
           className="btn sm accent"
           disabled={!tokens.length || !d.name.trim() || !d.sgClass}
           onClick={() => {
             approveProposal(proposal.id, d, tokens, scope)
-            toast('Rule saved — applies to future orders automatically')
+            toast(t.proposal.saved)
           }}
         >
           <IconCheck size={14} />
-          Approve
+          {t.common.approve}
         </button>
       </footer>
     </article>

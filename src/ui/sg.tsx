@@ -1,4 +1,4 @@
-import { SG_CLASS_INFO } from '../sg'
+import { t } from '../i18n'
 import type { SgClass } from '../types'
 import { Badge, type Tone } from './index'
 
@@ -12,6 +12,6 @@ const TONE: Record<SgClass, Tone> = {
 }
 
 export function ClassBadge({ value }: { value?: SgClass }) {
-  if (!value) return <Badge tone="bad" dot>Unclassified</Badge>
-  return <Badge tone={TONE[value]}>{SG_CLASS_INFO[value].short}</Badge>
+  if (!value) return <Badge tone="bad" dot>{t.common.unclassified}</Badge>
+  return <Badge tone={TONE[value]}>{t.sgClass[value].short}</Badge>
 }

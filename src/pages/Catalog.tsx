@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { deleteProduct, saveProduct } from '../actions'
 import { fmtMoney, uid } from '../format'
-import { isDutiable, RATION_LIMITS, SG_CLASS_INFO, SG_CLASSES } from '../sg'
+import { t } from '../i18n'
+import { isDutiable, RATION_LIMITS, SG_CLASSES } from '../sg'
 import { useStore } from '../store'
 import type { Product, RationKind, SgClass } from '../types'
 import { Card, Empty, Modal, PageHead, toast } from '../ui'
@@ -31,7 +32,7 @@ function ProductForm({ initial, onClose }: { initial: Product; onClose: () => vo
 
   return (
     <Modal
-      title={isNew ? 'New product' : p.name || 'Edit product'}
+      title={isNew ? t.catalog.newProduct : p.name || t.catalog.editProduct}
       onClose={onClose}
       footer={
         <>
@@ -39,88 +40,88 @@ function ProductForm({ initial, onClose }: { initial: Product; onClose: () => vo
             <button
               className="btn ghost danger"
               onClick={() => {
-                if (confirm(ruleCount ? `Delete this product and its ${ruleCount} rule${ruleCount > 1 ? 's' : ''}?` : 'Delete this product?')) {
+                if (confirm(ruleCount ? t.catalog.deleteWithRules(ruleCount) : t.catalog.deleteConfirm)) {
                   deleteProduct(p.id)
                   onClose()
                 }
               }}
             >
               <IconTrash />
-              Delete
+              {t.common.delete}
             </button>
           )}
           <span className="spacer" />
-          <button className="btn" onClick={onClose}>Cancel</button>
+          <button className="btn" onClick={onClose}>{t.common.cancel}</button>
           <button
             className="btn primary"
             disabled={!valid}
             onClick={() => {
               saveProduct({ ...p, sku: p.sku.trim().toUpperCase(), name: p.name.trim() })
-              toast(ruleCount ? `Saved — ${ruleCount} rule${ruleCount > 1 ? 's' : ''} now use the update` : 'Saved')
+              toast(ruleCount ? t.catalog.savedWithRules(ruleCount) : t.catalog.saved)
               onClose()
             }}
           >
-            Save
+            {t.common.save}
           </button>
         </>
       }
     >
       <div className="grid cols-3" style={{ gap: 14 }}>
         <label className="field">
-          <span>SKU</span>
+          <span>{t.catalog.sku}</span>
           <input className="input mono" value={p.sku} onChange={(e) => set({ sku: e.target.value })} />
         </label>
         <label className="field" style={{ gridColumn: 'span 2' }}>
-          <span>Declared name</span>
+          <span>{t.common.declaredName}</span>
           <input className="input" value={p.name} onChange={(e) => set({ name: e.target.value })} />
         </label>
         <label className="field">
-          <span>Pack</span>
+          <span>{t.common.pack}</span>
           <input className="input" value={p.spec} onChange={(e) => set({ spec: e.target.value })} />
         </label>
         <label className="field">
-          <span>Unit</span>
+          <span>{t.common.unit}</span>
           <input className="input" value={p.unit} onChange={(e) => set({ unit: e.target.value.toUpperCase() })} />
         </label>
         <label className="field">
-          <span>HS code</span>
+          <span>{t.common.hsCode}</span>
           <input className="input mono" value={p.hs} onChange={(e) => set({ hs: e.target.value })} />
         </label>
         <label className="field">
-          <span>Category</span>
+          <span>{t.common.category}</span>
           <input className="input" value={p.category} onChange={(e) => set({ category: e.target.value })} />
         </label>
         <label className="field">
-          <span>Unit price (SGD)</span>
+          <span>{t.common.unitPrice}</span>
           <input className="input num" type="number" min={0} step="0.01" value={p.price} onChange={(e) => set({ price: Number(e.target.value) })} />
         </label>
         <div />
         <label className="field" style={{ gridColumn: 'span 3' }}>
-          <span>Singapore route</span>
+          <span>{t.catalog.sgRoute}</span>
           <select className="select" value={p.sgClass ?? ''} onChange={(e) => setClass(e.target.value as SgClass)}>
             {SG_CLASSES.map((c) => (
-              <option key={c} value={c}>{SG_CLASS_INFO[c].label} — {SG_CLASS_INFO[c].route}</option>
+              <option key={c} value={c}>{t.sgClass[c].label} — {t.sgClass[c].route}</option>
             ))}
           </select>
         </label>
         {p.sgClass === 'controlled' && (
           <label className="field" style={{ gridColumn: 'span 3' }}>
-            <span>Competent Authority</span>
-            <input className="input" value={p.controlAuthority ?? ''} placeholder="e.g. SPF Arms & Explosives" onChange={(e) => set({ controlAuthority: e.target.value })} />
+            <span>{t.common.competentAuthority}</span>
+            <input className="input" value={p.controlAuthority ?? ''} placeholder={t.common.caPlaceholder} onChange={(e) => set({ controlAuthority: e.target.value })} />
           </label>
         )}
         {isDutiable(p.sgClass) && (
           <>
             <label className="field" style={{ gridColumn: 'span 2' }}>
-              <span>Ration</span>
+              <span>{t.common.ration}</span>
               <select className="select" value={p.rationKind ?? ''} onChange={(e) => set({ rationKind: e.target.value as RationKind })}>
                 {KINDS.map((k) => (
-                  <option key={k} value={k}>{RATION_LIMITS[k].label} — {RATION_LIMITS[k].perDay} {RATION_LIMITS[k].unit} per crew per day</option>
+                  <option key={k} value={k}>{t.common.rationPerDay(t.ration[k].label, RATION_LIMITS[k].perDay, t.ration[k].unit)}</option>
                 ))}
               </select>
             </label>
             <label className="field">
-              <span>{p.rationKind ? RATION_LIMITS[p.rationKind].unit : 'Units'} per {p.unit || 'unit'}</span>
+              <span>{t.common.unitsPer(p.rationKind && t.ration[p.rationKind].unit, p.unit)}</span>
               <input className="input num" type="number" min={0} value={p.rationUnitQty ?? ''} onChange={(e) => set({ rationUnitQty: Number(e.target.value) || undefined })} />
             </label>
           </>
@@ -146,12 +147,12 @@ export default function Catalog() {
   return (
     <>
       <PageHead
-        title="Catalog"
-        sub="Your products and how Singapore Customs treats each one. Rules point here, so a fix applies to every future order."
+        title={t.catalog.title}
+        sub={t.catalog.sub}
         actions={
           <button className="btn primary" onClick={() => setEditing(blank())}>
             <IconPlus />
-            New product
+            {t.catalog.newProduct}
           </button>
         }
       />
@@ -161,30 +162,30 @@ export default function Catalog() {
           <div className="row wrap">
             <div className="search">
               <IconSearch />
-              <input className="input" placeholder="Search SKU, name, HS" value={q} onChange={(e) => setQ(e.target.value)} />
+              <input className="input" placeholder={t.catalog.search} value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
-            <select className="select" style={{ width: 'auto' }} value={cls} onChange={(e) => setCls(e.target.value as SgClass | '')} aria-label="Route">
-              <option value="">All routes</option>
+            <select className="select" style={{ width: 'auto' }} value={cls} onChange={(e) => setCls(e.target.value as SgClass | '')} aria-label={t.common.route}>
+              <option value="">{t.catalog.allRoutes}</option>
               {SG_CLASSES.map((c) => (
-                <option key={c} value={c}>{SG_CLASS_INFO[c].label}</option>
+                <option key={c} value={c}>{t.sgClass[c].label}</option>
               ))}
             </select>
           </div>
         }
-        meta={`${shown.length} of ${products.length}`}
+        meta={t.catalog.shown(shown.length, products.length)}
       >
         {shown.length ? (
           <div className="table-wrap">
             <table className="table">
               <thead>
                 <tr>
-                  <th>SKU</th>
-                  <th>Product</th>
-                  <th>HS</th>
-                  <th>Route</th>
-                  <th>Ration / authority</th>
-                  <th className="r">Price</th>
-                  <th className="r">Rules</th>
+                  <th>{t.catalog.sku}</th>
+                  <th>{t.catalog.productCol}</th>
+                  <th>{t.common.hs}</th>
+                  <th>{t.common.route}</th>
+                  <th>{t.catalog.rationCol}</th>
+                  <th className="r">{t.catalog.price}</th>
+                  <th className="r">{t.catalog.rulesCol}</th>
                 </tr>
               </thead>
               <tbody>
@@ -199,7 +200,7 @@ export default function Catalog() {
                     <td><ClassBadge value={p.sgClass} /></td>
                     <td className="small muted">
                       {p.rationKind
-                        ? `${RATION_LIMITS[p.rationKind].label} · ${p.rationUnitQty} ${RATION_LIMITS[p.rationKind].unit}/${p.unit}`
+                        ? `${t.ration[p.rationKind].label} · ${p.rationUnitQty} ${t.ration[p.rationKind].unit}/${p.unit}`
                         : p.controlAuthority ?? '—'}
                     </td>
                     <td className="r num">{fmtMoney(p.price)}</td>
@@ -210,7 +211,7 @@ export default function Catalog() {
             </table>
           </div>
         ) : (
-          <Empty title="No products match" />
+          <Empty title={t.catalog.noMatch} />
         )}
       </Card>
       {editing && <ProductForm initial={editing} onClose={() => setEditing(null)} />}

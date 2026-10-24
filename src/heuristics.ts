@@ -2,6 +2,7 @@
    Keyword defaults only — a person approves every suggestion before it becomes a rule. */
 
 import { tokenize } from './engine'
+import { t } from './i18n'
 import type { Product, Proposal, RationKind, SgClass } from './types'
 
 type Draft = Proposal['draft']
@@ -12,19 +13,19 @@ interface Hint {
   category: string
   rationKind?: RationKind
   controlAuthority?: string
-  why: string
+  why: keyof typeof t.heuristic
 }
 
 const HINTS: Hint[] = [
-  { test: /\b(FOR INSTALLATION|TO BE INSTALLED|INSTALL(ED|ING)?|FITTING ON BOARD)\b/, sgClass: 'ship_spare_install', category: 'Spares', why: 'The order says the part is for installation on the vessel, so it is not a sea store and GST applies.' },
-  { test: /\b(WHISK(E)?Y|VODKA|GIN|RUM|BRANDY|COGNAC|TEQUILA|LIQUEUR|SPIRIT)S?\b/, sgClass: 'dutiable_liquor', rationKind: 'spirits', category: 'Bonded', why: 'Spirits are dutiable liquor: approved vessel and the 0.25 bottle daily ration apply.' },
-  { test: /\bWINES?\b/, sgClass: 'dutiable_liquor', rationKind: 'wine', category: 'Bonded', why: 'Wine is dutiable liquor: approved vessel and the 0.25 bottle daily ration apply.' },
-  { test: /\b(BEER|LAGER|STOUT|ALE)S?\b/, sgClass: 'dutiable_liquor', rationKind: 'beer', category: 'Bonded', why: 'Beer is dutiable liquor: approved vessel and the 4 can daily ration apply.' },
-  { test: /\bCIGARS?\b|\bCHEROOTS?\b/, sgClass: 'dutiable_tobacco', rationKind: 'cigars', category: 'Bonded', why: 'Cigars are dutiable tobacco with a 3 stick daily ration.' },
-  { test: /\bCIGARETTES?\b/, sgClass: 'dutiable_tobacco', rationKind: 'cigarettes', category: 'Bonded', why: 'Cigarettes are dutiable tobacco with a 40 stick daily ration.' },
-  { test: /\bTOBACCO\b/, sgClass: 'dutiable_tobacco', rationKind: 'tobacco', category: 'Bonded', why: 'Smoking tobacco is dutiable with a 15 g daily ration.' },
-  { test: /\b(FLARES?|PYROTECHNIC|ROCKETS?|LINE THROW(ING|ER)?|SMOKE SIGNAL)\b/, sgClass: 'controlled', controlAuthority: 'SPF Arms & Explosives', category: 'Safety', why: 'Pyrotechnics are controlled explosives and need Competent Authority approval.' },
-  { test: /\b(IMPELLER|VALVE|GASKET|BEARING|SEAL|FILTER|PISTON|LINER|INJECTOR|PUMP)S?\b/, sgClass: 'sea_store_paid', category: 'Spares', why: 'Spare kept on board as stores. If it will be installed during the call, classify it as a spare for installation instead.' },
+  { test: /\b(FOR INSTALLATION|TO BE INSTALLED|INSTALL(ED|ING)?|FITTING ON BOARD)\b/, sgClass: 'ship_spare_install', category: 'Spares', why: 'install' },
+  { test: /\b(WHISK(E)?Y|VODKA|GIN|RUM|BRANDY|COGNAC|TEQUILA|LIQUEUR|SPIRIT)S?\b/, sgClass: 'dutiable_liquor', rationKind: 'spirits', category: 'Bonded', why: 'spirits' },
+  { test: /\bWINES?\b/, sgClass: 'dutiable_liquor', rationKind: 'wine', category: 'Bonded', why: 'wine' },
+  { test: /\b(BEER|LAGER|STOUT|ALE)S?\b/, sgClass: 'dutiable_liquor', rationKind: 'beer', category: 'Bonded', why: 'beer' },
+  { test: /\bCIGARS?\b|\bCHEROOTS?\b/, sgClass: 'dutiable_tobacco', rationKind: 'cigars', category: 'Bonded', why: 'cigars' },
+  { test: /\bCIGARETTES?\b/, sgClass: 'dutiable_tobacco', rationKind: 'cigarettes', category: 'Bonded', why: 'cigarettes' },
+  { test: /\bTOBACCO\b/, sgClass: 'dutiable_tobacco', rationKind: 'tobacco', category: 'Bonded', why: 'tobacco' },
+  { test: /\b(FLARES?|PYROTECHNIC|ROCKETS?|LINE THROW(ING|ER)?|SMOKE SIGNAL)\b/, sgClass: 'controlled', controlAuthority: 'SPF Arms & Explosives', category: 'Safety', why: 'pyro' },
+  { test: /\b(IMPELLER|VALVE|GASKET|BEARING|SEAL|FILTER|PISTON|LINER|INJECTOR|PUMP)S?\b/, sgClass: 'sea_store_paid', category: 'Spares', why: 'spare' },
 ]
 
 const NOISE = /^(\d+([.,]\d+)?[A-Z]*|X|FOR|THE|OF|AND|WITH|PCS?|CTN|BTL|BAG|CASE|EA|SET|FRESH|NEW)$/
@@ -58,7 +59,7 @@ export function heuristicPropose(desc: string, orderUnit: string, products: Prod
   const linked = matchProduct(desc, products)
   if (linked && (!hint || hint.sgClass === linked.sgClass)) {
     const { id, sku: _sku, ...rest } = linked
-    return { draft: rest, productId: id, rationale: `Matches catalog item ${linked.sku} (${linked.name}).` }
+    return { draft: rest, productId: id, rationale: t.heuristic.catalog(linked.sku, linked.name) }
   }
   const sticks = up.match(/\b(\d+)\s*S\b/)
   return {
@@ -73,6 +74,6 @@ export function heuristicPropose(desc: string, orderUnit: string, products: Prod
       rationKind: hint?.rationKind,
       rationUnitQty: hint?.rationKind === 'cigarettes' ? Number(sticks?.[1] ?? 200) : hint?.rationKind ? 1 : undefined,
     },
-    rationale: hint?.why ?? 'No keyword matched. Defaulted to a duty-paid general store; check before approving.',
+    rationale: hint ? (t.heuristic[hint.why] as string) : t.heuristic.fallback,
   }
 }

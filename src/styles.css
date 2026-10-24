@@ -1,7 +1,7 @@
 /* Bearing design system — tokens, base, primitives. */
 
 :root {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
 
   --bg: #f7f7f5;
@@ -682,6 +682,7 @@ code,
 
 .modal-body { padding: 18px 20px; }
 
+
 .modal-foot {
   display: flex;
   justify-content: flex-end;
@@ -988,3 +989,17 @@ fieldset:disabled .select {
   .nav a { padding: 0 9px; }
   .page-head h1 { font-size: 21px; }
 }
+
+/* Korean: break between words, not inside them */
+:lang(ko) body { word-break: keep-all; overflow-wrap: anywhere; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.topbar .seg.lang button { min-width: 34px; justify-content: center; }

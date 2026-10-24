@@ -2,9 +2,12 @@
    declaration (limits, totals, amounts) is computed here, never by the model.
    Source: customs.gov.sg — Supply of Air/Sea Stores (checked 24 Oct 2026). */
 
+import { fmtNum } from './format'
+import { t } from './i18n'
 import type { Order, PermitGroup, RationCheck, RationKind, ResolvedLine, SgClass, SgDeclaration, VesselInfo, VesselType } from './types'
 
-/** Duty-free ration per crew member per day, in ration units. */
+/** Duty-free ration per crew member per day, in ration units. Labels here are the English
+    wording used on customs documents; the UI reads `t.ration`. */
 export const RATION_LIMITS: Record<RationKind, { perDay: number; unit: string; label: string }> = {
   cigarettes: { perDay: 40, unit: 'sticks', label: 'Cigarettes' },
   tobacco: { perDay: 15, unit: 'g', label: 'Smoking tobacco' },
@@ -17,22 +20,11 @@ export const RATION_LIMITS: Record<RationKind, { perDay: number; unit: string; l
 /** Vessel types allowed to take dutiable sea stores (liquor and tobacco). */
 export const APPROVED_VESSEL_TYPES: VesselType[] = ['passenger', 'cargo', 'oil_rig', 'dredge', 'fishing', 'supply', 'tug']
 
+export const VESSEL_TYPES: VesselType[] = ['cargo', 'passenger', 'oil_rig', 'dredge', 'fishing', 'supply', 'tug', 'other']
+
 export const SG_CLASSES: SgClass[] = [
   'sea_store_paid', 'sea_store_unpaid', 'dutiable_liquor', 'dutiable_tobacco', 'controlled', 'ship_spare_install',
 ]
-
-export const SG_CLASS_INFO: Record<SgClass, { label: string; short: string; route: string }> = {
-  sea_store_paid: { label: 'Sea store · duty paid', short: 'Duty paid', route: 'No permit. Report on the monthly statement.' },
-  sea_store_unpaid: { label: 'Sea store · duty unpaid', short: 'Duty unpaid', route: 'TradeNet OUT permit (APS).' },
-  dutiable_liquor: { label: 'Dutiable · liquor', short: 'Liquor', route: 'APS permit, approved vessel, daily ration.' },
-  dutiable_tobacco: { label: 'Dutiable · tobacco', short: 'Tobacco', route: 'APS permit, approved vessel, daily ration.' },
-  controlled: { label: 'Controlled item', short: 'Controlled', route: 'Competent Authority approval, then OUT (DRT).' },
-  ship_spare_install: { label: 'Spare for installation', short: 'Install', route: 'Not sea stores. GST applies.' },
-}
-
-export const VESSEL_TYPE_LABEL: Record<VesselType, string> = {
-  cargo: 'Cargo', passenger: 'Passenger', oil_rig: 'Oil rig', dredge: 'Dredger', fishing: 'Fishing', supply: 'Supply boat', tug: 'Tug', other: 'Other',
-}
 
 export function isDutiable(c: SgClass | undefined): boolean {
   return c === 'dutiable_liquor' || c === 'dutiable_tobacco'
@@ -127,38 +119,39 @@ export function sgPreflight(decl: SgDeclaration, v: VesselInfo): Issue[] {
   const pending = decl.lines.filter((l) => l.state === 'proposed').map((l) => l.idx)
   const dutiable = decl.lines.filter((l) => isDutiable(l.sgClass))
 
-  if (unclassified.length) issues.push({ level: 'block', code: 'unclassified', message: `${plural(unclassified.length, 'line')} not classified yet.`, lines: unclassified })
-  if (pending.length) issues.push({ level: 'block', code: 'pending', message: `${plural(pending.length, 'suggested classification')} waiting for approval.`, lines: pending })
-  if (!v.name) issues.push({ level: 'block', code: 'vessel_name', message: 'Vessel name is missing.' })
-  if (!v.flag) issues.push({ level: 'block', code: 'flag', message: 'Vessel nationality (flag) is required on a sea-stores permit.' })
+  if (unclassified.length) issues.push({ level: 'block', code: 'unclassified', message: t.issue.unclassified(unclassified.length), lines: unclassified })
+  if (pending.length) issues.push({ level: 'block', code: 'pending', message: t.issue.pending(pending.length), lines: pending })
+  if (!v.name) issues.push({ level: 'block', code: 'vessel_name', message: t.issue.vesselName })
+  if (!v.flag) issues.push({ level: 'block', code: 'flag', message: t.issue.flag })
 
   if (dutiable.length) {
     const allowed = vesselAllowsDutiable(v)
     const idx = dutiable.map((l) => l.idx)
-    if (allowed === undefined) issues.push({ level: 'block', code: 'vessel_type', message: 'Vessel type is needed to check eligibility for liquor and tobacco.', lines: idx })
-    else if (!allowed) issues.push({ level: 'block', code: 'vessel_not_approved', message: 'This vessel type cannot take dutiable stores. Remove the liquor and tobacco lines.', lines: idx })
-    if (!v.crew || !v.voyageDays) issues.push({ level: 'block', code: 'crew_days', message: 'Crew count and voyage days are needed to check daily rations.', lines: idx })
+    if (allowed === undefined) issues.push({ level: 'block', code: 'vessel_type', message: t.issue.vesselType, lines: idx })
+    else if (!allowed) issues.push({ level: 'block', code: 'vessel_not_approved', message: t.issue.vesselNotApproved, lines: idx })
+    if (!v.crew || !v.voyageDays) issues.push({ level: 'block', code: 'crew_days', message: t.issue.crewDays, lines: idx })
     const noRation = dutiable.filter((l) => !l.rationKind).map((l) => l.idx)
-    if (noRation.length) issues.push({ level: 'block', code: 'ration_kind', message: `${plural(noRation.length, 'dutiable line')} missing a ration type.`, lines: noRation })
+    if (noRation.length) issues.push({ level: 'block', code: 'ration_kind', message: t.issue.rationKind(noRation.length), lines: noRation })
   }
 
   for (const r of decl.rations) {
     if (!r.ok && v.crew && v.voyageDays) {
       const lim = RATION_LIMITS[r.kind]
+      const ui = t.ration[r.kind]
       issues.push({
         level: 'block',
         code: `ration_${r.kind}`,
-        message: `${lim.label}: ${fmt(r.requested)} ${lim.unit} requested, ${fmt(r.allowed)} allowed (${v.crew} crew × ${v.voyageDays} days × ${lim.perDay}).`,
+        message: t.issue.ration(ui.label, fmtNum(r.requested), fmtNum(r.allowed), ui.unit, v.crew, v.voyageDays, lim.perDay),
         lines: r.lines,
       })
     }
   }
 
   const unapproved = Object.entries(decl.caChecks).filter(([, ok]) => !ok).map(([ca]) => ca)
-  if (unapproved.length) issues.push({ level: 'block', code: 'ca', message: `Approval not confirmed: ${unapproved.join(', ')}.` })
+  if (unapproved.length) issues.push({ level: 'block', code: 'ca', message: t.issue.ca(unapproved.join(', ')) })
 
-  if (decl.excluded.length) issues.push({ level: 'warn', code: 'install', message: `${plural(decl.excluded.length, 'line')} for installation left out of sea stores. Invoice with GST.`, lines: decl.excluded })
-  if (!v.imo) issues.push({ level: 'warn', code: 'imo', message: 'IMO number is missing.' })
+  if (decl.excluded.length) issues.push({ level: 'warn', code: 'install', message: t.issue.install(decl.excluded.length), lines: decl.excluded })
+  if (!v.imo) issues.push({ level: 'warn', code: 'imo', message: t.issue.imo })
   return issues
 }
 
@@ -210,12 +203,4 @@ export function monthlyStatement(orders: Order[], month: string): StatementRow[]
 
 function round(n: number): number {
   return Math.round(n * 100) / 100
-}
-
-function fmt(n: number): string {
-  return n.toLocaleString('en-SG')
-}
-
-function plural(n: number, word: string): string {
-  return `${n} ${word}${n === 1 ? '' : 's'}`
 }

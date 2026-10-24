@@ -1,10 +1,11 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { addProposals, deleteOrder, updateVessel } from '../actions'
-import { headline, STATUS_INFO, viewOrder, type OrderView } from '../derive'
+import { headline, statusInfo, viewOrder, type OrderView } from '../derive'
 import { fmtDateTime, fmtMoney } from '../format'
+import { t } from '../i18n'
 import { proposeFor } from '../lib/propose'
-import { lineAmount, sumAmount, VESSEL_TYPE_LABEL, type Issue } from '../sg'
+import { lineAmount, sumAmount, VESSEL_TYPES, type Issue } from '../sg'
 import { useStore } from '../store'
 import type { ResolvedLine, VesselInfo, VesselType } from '../types'
 import { Badge, Card, Empty, Flag, Notice, PageHead, toast } from '../ui'
@@ -31,10 +32,10 @@ export function LinesTable({ lines, currency, actions }: {
         <thead>
           <tr>
             <th style={{ width: 36 }}>#</th>
-            <th>Order line → declared as</th>
-            <th>Route</th>
-            <th className="r">Qty</th>
-            <th className="r">Amount</th>
+            <th>{t.order.lineCol}</th>
+            <th>{t.common.route}</th>
+            <th className="r">{t.common.qty}</th>
+            <th className="r">{t.order.amount}</th>
             {actions && <th />}
           </tr>
         </thead>
@@ -49,13 +50,13 @@ export function LinesTable({ lines, currency, actions }: {
                     {l.name} <span className="muted" style={{ fontWeight: 400 }}>· {l.spec}</span>
                   </div>
                 ) : (
-                  <div className="small" style={{ color: 'var(--bad)' }}>No rule yet</div>
+                  <div className="small" style={{ color: 'var(--bad)' }}>{t.order.noRule}</div>
                 )}
               </td>
               <td>
                 <div className="row wrap" style={{ gap: 6 }}>
                   <ClassBadge value={l.sgClass} />
-                  {l.state === 'proposed' && <Badge tone="info">Suggested</Badge>}
+                  {l.state === 'proposed' && <Badge tone="info">{t.order.suggested}</Badge>}
                 </div>
               </td>
               <td className="r num">
@@ -69,7 +70,7 @@ export function LinesTable({ lines, currency, actions }: {
         <tfoot>
           <tr>
             <td />
-            <td colSpan={3} className="strong">Total</td>
+            <td colSpan={3} className="strong">{t.common.total}</td>
             <td className="r num strong">{fmtMoney(sumAmount(lines), currency)}</td>
             {actions && <td />}
           </tr>
@@ -79,46 +80,45 @@ export function LinesTable({ lines, currency, actions }: {
   )
 }
 
-const TYPES = Object.keys(VESSEL_TYPE_LABEL) as VesselType[]
 
 export function VesselCard({ orderId, vessel, locked }: { orderId: string; vessel: VesselInfo; locked?: boolean }) {
   const set = (patch: Partial<VesselInfo>) => updateVessel(orderId, patch)
   const num = (v: string) => (v === '' ? undefined : Math.max(0, Number(v)))
   return (
-    <Card title={<div className="row"><IconShip /><h2>Vessel</h2></div>} meta={locked ? 'Locked after filing' : 'From the email · editable'}>
+    <Card title={<div className="row"><IconShip /><h2>{t.order.vessel}</h2></div>} meta={locked ? t.order.locked : t.order.editable}>
       <fieldset disabled={locked} style={{ border: 0, padding: 0, margin: 0 }} className="stack">
         <label className="field">
-          <span>Name</span>
+          <span>{t.order.name}</span>
           <input className="input" value={vessel.name} onChange={(e) => set({ name: e.target.value.toUpperCase() })} />
         </label>
         <div className="grid cols-2" style={{ gap: 12 }}>
           <label className="field">
-            <span>IMO</span>
+            <span>{t.order.imo}</span>
             <input className="input mono" value={vessel.imo ?? ''} onChange={(e) => set({ imo: e.target.value.replace(/\D/g, '').slice(0, 7) || undefined })} />
           </label>
           <label className="field">
-            <span>Flag</span>
+            <span>{t.order.flag}</span>
             <input className="input" value={vessel.flag ?? ''} onChange={(e) => set({ flag: e.target.value || undefined })} />
           </label>
           <label className="field">
-            <span>Type</span>
+            <span>{t.order.type}</span>
             <select className="select" value={vessel.type ?? ''} onChange={(e) => set({ type: (e.target.value || undefined) as VesselType | undefined })}>
-              <option value="">Unknown</option>
-              {TYPES.map((t) => (
-                <option key={t} value={t}>{VESSEL_TYPE_LABEL[t]}</option>
+              <option value="">{t.common.unknown}</option>
+              {VESSEL_TYPES.map((k) => (
+                <option key={k} value={k}>{t.vesselType[k]}</option>
               ))}
             </select>
           </label>
           <label className="field">
-            <span>Location</span>
+            <span>{t.order.location}</span>
             <input className="input" value={vessel.location ?? ''} onChange={(e) => set({ location: e.target.value || undefined })} />
           </label>
           <label className="field">
-            <span>Crew</span>
+            <span>{t.order.crew}</span>
             <input className="input num" type="number" min={0} value={vessel.crew ?? ''} onChange={(e) => set({ crew: num(e.target.value) })} />
           </label>
           <label className="field">
-            <span>Voyage days</span>
+            <span>{t.order.voyageDays}</span>
             <input className="input num" type="number" min={0} value={vessel.voyageDays ?? ''} onChange={(e) => set({ voyageDays: num(e.target.value) })} />
           </label>
         </div>
@@ -132,7 +132,7 @@ export function IssueList({ issues }: { issues: Issue[] }) {
     return (
       <div className="row" style={{ color: 'var(--ok)' }}>
         <IconCheck />
-        <span className="strong">All checks passed</span>
+        <span className="strong">{t.order.allPassed}</span>
       </div>
     )
   return (
@@ -142,7 +142,7 @@ export function IssueList({ issues }: { issues: Issue[] }) {
           <IconAlert size={15} />
           <div>
             {i.message}
-            {i.lines && <span className="muted small"> Lines {i.lines.join(', ')}</span>}
+            {i.lines && <span className="muted small">{t.order.linesRef(i.lines.join(', '))}</span>}
           </div>
         </li>
       ))}
@@ -165,7 +165,7 @@ function Classify({ v }: { v: OrderView }) {
     try {
       const out = await proposeFor(v.order, unknown, products, rules)
       addProposals(out.proposals)
-      toast(out.source === 'ai' ? 'Suggestions ready — review before approving' : `Offline suggestions (${out.fallbackReason}) — review before approving`)
+      toast(out.source === 'ai' ? t.order.suggestDoneAi : t.order.suggestDoneOffline(out.fallbackReason ?? ''))
     } finally {
       setBusy(false)
     }
@@ -173,13 +173,13 @@ function Classify({ v }: { v: OrderView }) {
 
   return (
     <Card
-      title={<div className="row"><IconSparkle /><h2>Classification</h2></div>}
-      meta={unknown.length ? `${unknown.length} line${unknown.length > 1 ? 's' : ''} without a rule` : `${pending.length} to approve`}
+      title={<div className="row"><IconSparkle /><h2>{t.order.classification}</h2></div>}
+      meta={unknown.length ? t.order.withoutRule(unknown.length) : t.order.toApprove(pending.length)}
       actions={
         unknown.length ? (
           <button className="btn sm primary" onClick={suggest} disabled={busy}>
             <IconSparkle size={14} />
-            {busy ? 'Thinking…' : 'Suggest classification'}
+            {busy ? t.order.thinking : t.order.suggest}
           </button>
         ) : undefined
       }
@@ -187,8 +187,8 @@ function Classify({ v }: { v: OrderView }) {
       <div className="stack">
         {unknown.length > 0 && !pending.length && (
           <p className="muted">
-            Bearing has no rule for {unknown.map((l) => <code key={l.idx}>{l.desc}</code>).reduce<ReactNode[]>((a, c, i) => (i ? [...a, ', ', c] : [c]), [])}.
-            Get a suggested route with its reasoning, then approve it once.
+            {t.order.noRuleFor} {unknown.map((l) => <code key={l.idx}>{l.desc}</code>).reduce<ReactNode[]>((a, c, i) => (i ? [...a, ', ', c] : [c]), [])}
+            {t.order.noRuleAfter}
           </p>
         )}
         {pending.map((p) => (
@@ -204,17 +204,17 @@ export default function OrderPage() {
   const v = useOrderView(id)
   const agencies = useStore((s) => s.agencies)
   const navigate = useNavigate()
-  if (!v) return <Empty title="Order not found"><Link to="/orders" className="btn" style={{ marginTop: 12 }}>Back to orders</Link></Empty>
+  if (!v) return <Empty title={t.common.orderNotFound}><Link to="/orders" className="btn" style={{ marginTop: 12 }}>{t.common.backToOrders}</Link></Empty>
   const o = v.order
-  const st = STATUS_INFO[v.status]
+  const st = statusInfo(v.status)
   const filed = !!o.decl?.confirmedAt
   return (
     <>
       <PageHead
-        crumbs={[{ to: '/orders', label: 'Orders' }]}
+        crumbs={[{ to: '/orders', label: t.nav.orders }]}
         title={
           <span className="row" style={{ gap: 12 }}>
-            {o.vessel.name || 'Unnamed vessel'}
+            {o.vessel.name || t.common.unnamedVessel}
             <Badge tone={st.tone} dot>{st.label}</Badge>
           </span>
         }
@@ -230,18 +230,18 @@ export default function OrderPage() {
               <button
                 className="btn ghost danger"
                 onClick={() => {
-                  if (confirm(`Delete ${o.ref}?`)) {
+                  if (confirm(t.order.deleteConfirm(o.ref))) {
                     deleteOrder(o.id)
                     navigate('/orders')
                   }
                 }}
               >
                 <IconTrash />
-                Delete
+                {t.common.delete}
               </button>
             )}
             <Link to={`/orders/${o.id}/declaration`} className="btn primary">
-              {filed ? 'View declaration' : 'Prepare declaration'}
+              {filed ? t.order.viewDecl : t.order.prepareDecl}
               <IconArrowRight />
             </Link>
           </>
@@ -251,19 +251,19 @@ export default function OrderPage() {
         <div className="stack">
           {!filed && (
             <Notice tone={o.readSource === 'ai' ? 'ok' : 'info'}>
-              {o.readSource === 'ai' ? 'Read by AI. Quantities are copied from the email, never calculated.' : 'Read with the offline reader. Check the vessel details and lines against the email.'}
+              {o.readSource === 'ai' ? t.order.readByAi : t.order.readOffline}
             </Notice>
           )}
           {!filed && <Classify v={v} />}
-          <Card title="Lines" meta={`${o.lines.length} lines · ${fmtMoney(sumAmount(v.lines), o.currency)}`} pad={false}>
+          <Card title={t.order.lines} meta={t.order.linesMeta(o.lines.length, fmtMoney(sumAmount(v.lines), o.currency))} pad={false}>
             <LinesTable lines={v.lines} currency={o.currency} />
           </Card>
-          <Card title="Original email" pad={false}>
+          <Card title={t.order.email} pad={false}>
             <pre className="email">{o.raw}</pre>
           </Card>
         </div>
         <div className="stack">
-          <Card title="Before filing" meta={headline(v).length ? `${v.blocking.length} blocking` : undefined}>
+          <Card title={t.order.beforeFiling} meta={headline(v).length ? t.common.blocking(v.blocking.length) : undefined}>
             <IssueList issues={v.issues} />
           </Card>
           <VesselCard orderId={o.id} vessel={o.vessel} locked={filed} />

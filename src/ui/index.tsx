@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { t } from '../i18n'
 import { FlagSG, IconAlert, IconChevron, IconInfo, IconX } from './icons'
 
 export type Tone = 'ok' | 'warn' | 'bad' | 'info' | 'violet' | 'accent' | 'neutral' | 'outline'
@@ -15,7 +16,7 @@ export function Badge({ tone = 'neutral', dot, children }: { tone?: Tone; dot?: 
 
 export function Flag({ code }: { code: 'SG' }) {
   return (
-    <span className="flag" title="Singapore">
+    <span className="flag" title={t.common.singapore}>
       {code === 'SG' && <FlagSG />}
       {code}
     </span>
@@ -53,7 +54,7 @@ export function PageHead({ title, sub, crumbs, actions }: {
     <div className="page-head">
       <div>
         {crumbs && (
-          <nav className="crumbs" aria-label="Breadcrumb">
+          <nav className="crumbs" aria-label={t.common.breadcrumb}>
             {crumbs.map((c) => (
               <span key={c.to} className="row" style={{ gap: 6 }}>
                 <Link to={c.to}>{c.label}</Link>
@@ -125,7 +126,7 @@ export function Modal({ title, onClose, children, footer }: {
       <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-head">
           <h2>{title}</h2>
-          <button className="btn ghost sm" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label="Close">
+          <button className="btn ghost sm" style={{ marginLeft: 'auto' }} onClick={onClose} aria-label={t.common.close}>
             <IconX />
           </button>
         </div>

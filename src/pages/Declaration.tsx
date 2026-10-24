@@ -3,7 +3,8 @@ import { Link, useParams } from 'react-router-dom'
 import { confirmDeclaration, recordPermit, reopenDeclaration, setCaCheck, updateLineQty } from '../actions'
 import type { OrderView } from '../derive'
 import { fmtDateTime, fmtMoney, fmtNum } from '../format'
-import { lineAmount, RATION_LIMITS, sumAmount, VESSEL_TYPE_LABEL } from '../sg'
+import { t } from '../i18n'
+import { lineAmount, RATION_LIMITS, sumAmount } from '../sg'
 import type { ResolvedLine } from '../types'
 import { Badge, Card, Empty, Flag, Meter, Notice, PageHead, toast } from '../ui'
 import { IconArrowRight, IconCheck, IconFile, IconShield, IconTruck, IconX } from '../ui/icons'
@@ -41,7 +42,7 @@ function RouteCard({ tone, icon, title, note, lines, currency, footer }: {
           ))}
         </ul>
       ) : (
-        <p className="route-empty">None</p>
+        <p className="route-empty">{t.decl.none}</p>
       )}
       <footer>
         {footer ?? <span />}
@@ -57,10 +58,10 @@ function Rations({ v, locked }: { v: OrderView; locked: boolean }) {
   const days = order.vessel.voyageDays ?? 0
   if (!decl.rations.length) return null
   return (
-    <Card title="Daily ration check" meta={`${crew} crew × ${days} days`}>
+    <Card title={t.decl.rationTitle} meta={t.decl.crewDays(crew, days)}>
       <div className="stack">
         {decl.rations.map((r) => {
-          const lim = RATION_LIMITS[r.kind]
+          const lim = { ...RATION_LIMITS[r.kind], ...t.ration[r.kind] }
           const lines = decl.lines.filter((l) => r.lines.includes(l.idx))
           const single = lines.length === 1 ? lines[0] : undefined
           const fitQty = single ? Math.floor(r.allowed / (single.rationUnitQty ?? 1)) : 0
@@ -68,7 +69,7 @@ function Rations({ v, locked }: { v: OrderView; locked: boolean }) {
             <div key={r.kind} className="ration">
               <div className="row">
                 <span className="strong">{lim.label}</span>
-                {r.ok ? <Badge tone="ok"><IconCheck size={12} />Within allowance</Badge> : <Badge tone="bad">Over by {fmtNum(r.requested - r.allowed)} {lim.unit}</Badge>}
+                {r.ok ? <Badge tone="ok"><IconCheck size={12} />{t.decl.within}</Badge> : <Badge tone="bad">{t.decl.over(fmtNum(r.requested - r.allowed), lim.unit)}</Badge>}
                 <span className="spacer" />
                 <span className="num small">
                   <strong>{fmtNum(r.requested)}</strong> / {fmtNum(r.allowed)} {lim.unit}
@@ -76,14 +77,12 @@ function Rations({ v, locked }: { v: OrderView; locked: boolean }) {
               </div>
               <Meter value={r.requested} max={r.allowed} />
               <div className="row wrap small muted">
-                <span>
-                  Allowance = {crew} crew × {days} days × {lim.perDay} {lim.unit}
-                </span>
+                <span>{t.decl.allowance(crew, days, lim.perDay, lim.unit)}</span>
                 {!r.ok && single && !locked && (
                   <>
                     <span className="spacer" />
                     <label className="row" style={{ gap: 6 }}>
-                      Line {single.idx}
+                      {t.decl.line(single.idx)}
                       <input
                         className="input num"
                         style={{ width: 80, minHeight: 28, padding: '3px 8px' }}
@@ -95,7 +94,7 @@ function Rations({ v, locked }: { v: OrderView; locked: boolean }) {
                       {single.unit}
                     </label>
                     <button className="btn sm" onClick={() => updateLineQty(order.id, single.idx, fitQty)}>
-                      Cut to {fitQty} {single.unit}
+                      {t.decl.cutTo(fitQty, single.unit)}
                     </button>
                   </>
                 )}
@@ -112,19 +111,19 @@ function Approvals({ v, locked }: { v: OrderView; locked: boolean }) {
   const entries = Object.entries(v.decl.caChecks)
   if (!entries.length) return null
   return (
-    <Card title={<div className="row"><IconShield /><h2>Competent Authority approvals</h2></div>}>
+    <Card title={<div className="row"><IconShield /><h2>{t.decl.caTitle}</h2></div>}>
       <div className="stack">
-        <p className="small muted">Controlled items need the authority's approval (notification, licence or certificate) before the OUT (DRT) permit.</p>
+        <p className="small muted">{t.decl.caNote}</p>
         {entries.map(([ca, ok]) => {
           const items = v.decl.lines.filter((l) => l.sgClass === 'controlled' && (l.controlAuthority || 'Competent Authority') === ca)
           return (
             <label key={ca} className={`check ${ok ? 'on' : ''}`}>
-              <input type="checkbox" aria-label={`${ca} approval confirmed`} checked={ok} disabled={locked} onChange={(e) => setCaCheck(v.order.id, ca, e.target.checked)} />
+              <input type="checkbox" aria-label={t.decl.caConfirmed(ca)} checked={ok} disabled={locked} onChange={(e) => setCaCheck(v.order.id, ca, e.target.checked)} />
               <div>
                 <div className="strong">{ca}</div>
                 <div className="small muted">{items.map((l) => `${l.name} × ${l.qty}`).join(', ')}</div>
               </div>
-              <Badge tone={ok ? 'ok' : 'warn'}>{ok ? 'Approved' : 'Pending'}</Badge>
+              <Badge tone={ok ? 'ok' : 'warn'}>{ok ? t.decl.approved : t.decl.pendingCa}</Badge>
             </label>
           )
         })}
@@ -137,34 +136,34 @@ function Filing({ v }: { v: OrderView }) {
   const d = v.order.decl!
   const [permit, setPermit] = useState(d.tradenetPermitNo ?? '')
   return (
-    <Card title="Filed" meta={`Confirmed ${fmtDateTime(d.confirmedAt)}`}>
+    <Card title={t.decl.filed} meta={t.decl.confirmedAt(fmtDateTime(d.confirmedAt))}>
       <div className="stack">
         <label className="field">
-          <span>TradeNet permit number</span>
+          <span>{t.decl.permitNo}</span>
           <div className="row">
-            <input className="input mono" value={permit} placeholder="Enter after TradeNet approval" onChange={(e) => setPermit(e.target.value.toUpperCase())} />
+            <input className="input mono" value={permit} placeholder={t.decl.permitPlaceholder} onChange={(e) => setPermit(e.target.value.toUpperCase())} />
             <button
               className="btn"
               disabled={permit === (d.tradenetPermitNo ?? '')}
               onClick={() => {
                 recordPermit(v.order.id, permit)
-                toast('Permit number saved')
+                toast(t.decl.permitSaved)
               }}
             >
-              Save
+              {t.common.save}
             </button>
           </div>
         </label>
         <div className="row wrap">
           {!v.order.delivery && (
-            <button className="btn ghost sm" onClick={() => confirm('Reopen the declaration for changes?') && reopenDeclaration(v.order.id)}>
-              Reopen
+            <button className="btn ghost sm" onClick={() => confirm(t.decl.reopenConfirm) && reopenDeclaration(v.order.id)}>
+              {t.decl.reopen}
             </button>
           )}
           <span className="spacer" />
           <Link to={`/orders/${v.order.id}/delivery`} className="btn primary">
             <IconTruck />
-            {v.order.delivery ? 'View delivery' : 'Record delivery'}
+            {v.order.delivery ? t.decl.viewDelivery : t.decl.recordDelivery}
           </Link>
         </div>
       </div>
@@ -175,7 +174,7 @@ function Filing({ v }: { v: OrderView }) {
 export default function Declaration() {
   const { id } = useParams()
   const v = useOrderView(id)
-  if (!v) return <Empty title="Order not found" />
+  if (!v) return <Empty title={t.common.orderNotFound} />
   const { order, decl, blocking, issues } = v
   const locked = !!order.decl?.confirmedAt
   const at = (idx: number[]) => decl.lines.filter((l) => idx.includes(l.idx))
@@ -187,16 +186,16 @@ export default function Declaration() {
     <>
       <PageHead
         crumbs={[
-          { to: '/orders', label: 'Orders' },
+          { to: '/orders', label: t.nav.orders },
           { to: `/orders/${order.id}`, label: order.ref },
         ]}
-        title="Declaration"
+        title={t.decl.title}
         sub={
           <span className="row wrap" style={{ gap: 8 }}>
             <Flag code="SG" />
             <span className="strong">{order.vessel.name}</span>·
-            <span>{order.vessel.flag ?? 'Flag missing'}</span>·
-            <span>{order.vessel.type ? VESSEL_TYPE_LABEL[order.vessel.type] : 'Type missing'}</span>·
+            <span>{order.vessel.flag ?? t.common.flagMissing}</span>·
+            <span>{order.vessel.type ? t.vesselType[order.vessel.type] : t.common.typeMissing}</span>·
             <span className="mono">IMO {order.vessel.imo ?? '—'}</span>
           </span>
         }
@@ -205,14 +204,14 @@ export default function Declaration() {
             <button
               className="btn primary"
               disabled={blocking.length > 0}
-              title={blocking.length ? 'Clear the blocking checks first' : undefined}
+              title={blocking.length ? t.decl.clearFirst : undefined}
               onClick={() => {
                 confirmDeclaration(order.id, decl)
-                toast('Declaration confirmed')
+                toast(t.decl.confirmed)
               }}
             >
               <IconCheck />
-              Confirm declaration
+              {t.decl.confirm}
             </button>
           )
         }
@@ -220,9 +219,9 @@ export default function Declaration() {
       <div className="stack">
         {unrouted.length > 0 && (
           <Notice tone="warn">
-            {unrouted.length} line{unrouted.length > 1 ? 's have' : ' has'} no route yet.{' '}
+            {t.decl.unrouted(unrouted.length)}{' '}
             <Link to={`/orders/${order.id}`} className="strong" style={{ textDecoration: 'underline' }}>
-              Classify on the order
+              {t.decl.classifyOnOrder}
             </Link>
           </Notice>
         )}
@@ -230,32 +229,32 @@ export default function Declaration() {
           <RouteCard
             tone="info"
             icon={<IconFile />}
-            title="Permit · APS"
-            note="Duty-unpaid and dutiable stores. TradeNet OUT, CPC SEASTORE."
+            title={t.decl.aps}
+            note={t.decl.apsNote}
             lines={at(aps)}
             currency={order.currency}
           />
           <RouteCard
             tone="accent"
             icon={<IconCheck />}
-            title="Statement only"
-            note="Duty-paid, not controlled. No permit; monthly statement."
+            title={t.decl.statement}
+            note={t.decl.statementNote}
             lines={at(decl.statementOnly)}
             currency={order.currency}
           />
           <RouteCard
             tone="warn"
             icon={<IconShield />}
-            title="Authority · DRT"
-            note="Controlled items. Approval first, then OUT (DRT)."
+            title={t.decl.drt}
+            note={t.decl.drtNote}
             lines={at(drt)}
             currency={order.currency}
           />
           <RouteCard
             tone="neutral"
             icon={<IconX />}
-            title="Not sea stores"
-            note="Spares for installation. GST applies."
+            title={t.decl.excluded}
+            note={t.decl.excludedNote}
             lines={at(decl.excluded)}
             currency={order.currency}
           />
@@ -270,29 +269,27 @@ export default function Declaration() {
             {locked ? (
               <Filing v={v} />
             ) : (
-              <Card title="Before filing" meta={blocking.length ? `${blocking.length} blocking` : 'Ready'}>
+              <Card title={t.decl.beforeFiling} meta={blocking.length ? t.common.blocking(blocking.length) : t.decl.ready}>
                 <div className="stack">
                   <IssueList issues={issues} />
                   {!blocking.length && (
-                    <p className="small muted">
-                      Confirming freezes this split. The TradeNet preview and export use the frozen version.
-                    </p>
+                    <p className="small muted">{t.decl.freezeNote}</p>
                   )}
                 </div>
               </Card>
             )}
-            <Card title="Value" pad={false}>
+            <Card title={t.common.value} pad={false}>
               <table className="table">
                 <tbody>
-                  <tr><td>Permit lines</td><td className="r num">{fmtMoney(sumAmount(at(decl.permitLines)), order.currency)}</td></tr>
-                  <tr><td>Statement only</td><td className="r num">{fmtMoney(sumAmount(at(decl.statementOnly)), order.currency)}</td></tr>
-                  <tr><td>Not sea stores</td><td className="r num">{fmtMoney(sumAmount(at(decl.excluded)), order.currency)}</td></tr>
-                  <tr><td className="strong">Order total</td><td className="r num strong">{fmtMoney(decl.lines.reduce((s, l) => s + lineAmount(l), 0), order.currency)}</td></tr>
+                  <tr><td>{t.decl.permitLines}</td><td className="r num">{fmtMoney(sumAmount(at(decl.permitLines)), order.currency)}</td></tr>
+                  <tr><td>{t.decl.statement}</td><td className="r num">{fmtMoney(sumAmount(at(decl.statementOnly)), order.currency)}</td></tr>
+                  <tr><td>{t.decl.excluded}</td><td className="r num">{fmtMoney(sumAmount(at(decl.excluded)), order.currency)}</td></tr>
+                  <tr><td className="strong">{t.decl.orderTotal}</td><td className="r num strong">{fmtMoney(decl.lines.reduce((s, l) => s + lineAmount(l), 0), order.currency)}</td></tr>
                 </tbody>
               </table>
             </Card>
             <Link to={`/orders/${order.id}`} className="btn ghost">
-              Back to order <IconArrowRight />
+              {t.decl.back} <IconArrowRight />
             </Link>
           </div>
         </div>

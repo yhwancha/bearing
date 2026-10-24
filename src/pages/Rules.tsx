@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { deleteRule } from '../actions'
 import { fmtDate } from '../format'
+import { t } from '../i18n'
 import { useStore } from '../store'
 import { Badge, Card, Empty, PageHead } from '../ui'
 import { IconSearch, IconTrash } from '../ui/icons'
@@ -23,15 +24,15 @@ export default function Rules() {
   return (
     <>
       <PageHead
-        title="Rules"
-        sub={`${rules.length} rules · ${approved} approved by your team. Rules turn agency wording into declared items without AI.`}
+        title={t.rules.title}
+        sub={t.rules.sub(rules.length, approved)}
       />
       <Card
         pad={false}
         title={
           <div className="search">
             <IconSearch />
-            <input className="input" placeholder="Search wording or product" value={q} onChange={(e) => setQ(e.target.value)} />
+            <input className="input" placeholder={t.rules.search} value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
         }
       >
@@ -40,11 +41,11 @@ export default function Rules() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>When the order says</th>
-                  <th>Declare as</th>
-                  <th>Route</th>
-                  <th>Scope</th>
-                  <th>Source</th>
+                  <th>{t.rules.when}</th>
+                  <th>{t.rules.declareAs}</th>
+                  <th>{t.common.route}</th>
+                  <th>{t.rules.scope}</th>
+                  <th>{t.rules.source}</th>
                   <th />
                 </tr>
               </thead>
@@ -65,16 +66,16 @@ export default function Rules() {
                           <div className="small muted">{p.spec} · <span className="mono">{p.sku}</span></div>
                         </>
                       ) : (
-                        <span className="muted">Product removed</span>
+                        <span className="muted">{t.rules.removed}</span>
                       )}
                     </td>
                     <td><ClassBadge value={p?.sgClass} /></td>
-                    <td className="small">{r.agencyId ? agencies.find((a) => a.id === r.agencyId)?.name : 'All agencies'}</td>
+                    <td className="small">{r.agencyId ? agencies.find((a) => a.id === r.agencyId)?.name : t.rules.allAgencies}</td>
                     <td>
-                      {r.source === 'approved' ? <Badge tone="accent">Approved {fmtDate(r.createdAt)}</Badge> : <Badge>Starter</Badge>}
+                      {r.source === 'approved' ? <Badge tone="accent">{t.rules.approvedOn(fmtDate(r.createdAt))}</Badge> : <Badge>{t.rules.starter}</Badge>}
                     </td>
                     <td className="r">
-                      <button className="btn ghost sm" aria-label="Delete rule" onClick={() => confirm('Delete this rule?') && deleteRule(r.id)}>
+                      <button className="btn ghost sm" aria-label={t.rules.deleteLabel} onClick={() => confirm(t.rules.deleteConfirm) && deleteRule(r.id)}>
                         <IconTrash size={14} />
                       </button>
                     </td>
@@ -84,7 +85,7 @@ export default function Rules() {
             </table>
           </div>
         ) : (
-          <Empty title="No rules match" />
+          <Empty title={t.rules.noMatch} />
         )}
       </Card>
     </>

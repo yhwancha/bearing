@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fmtMoney, fmtMonth, monthOf } from '../format'
+import { t } from '../i18n'
 import { monthlyStatement } from '../sg'
 import { resetDemo, useStore } from '../store'
 import { Card, PageHead, Stat, toast } from '../ui'
@@ -20,42 +21,42 @@ export default function Overview() {
   return (
     <>
       <PageHead
-        title="Overview"
+        title={t.overview.title}
         sub={workspace.name}
         actions={
           <>
             <button
               className="btn ghost"
               onClick={() => {
-                if (confirm('Reset the demo workspace? Your changes will be lost.')) {
+                if (confirm(t.overview.resetConfirm)) {
                   resetDemo()
-                  toast('Demo reset')
+                  toast(t.overview.resetDone)
                 }
               }}
             >
               <IconReset />
-              Reset demo
+              {t.overview.reset}
             </button>
             <button className="btn primary" onClick={() => setIntake(true)}>
               <IconPlus />
-              New order
+              {t.overview.newOrder}
             </button>
           </>
         }
       />
       <div className="stack">
         <div className="grid cols-4">
-          <Stat label="Needs attention" value={count('review')} foot="Blocked before filing" />
-          <Stat label="Ready to file" value={count('ready')} foot="All checks passed" />
-          <Stat label="Filed, not delivered" value={count('filed')} foot="Awaiting delivery" />
-          <Stat label={`Statement · ${fmtMonth(month)}`} value={fmtMoney(statementValue)} foot="Duty-paid stores delivered" />
+          <Stat label={t.overview.attention} value={count('review')} foot={t.overview.attentionFoot} />
+          <Stat label={t.overview.ready} value={count('ready')} foot={t.overview.readyFoot} />
+          <Stat label={t.overview.filed} value={count('filed')} foot={t.overview.filedFoot} />
+          <Stat label={t.overview.statement(fmtMonth(month))} value={fmtMoney(statementValue)} foot={t.overview.statementFoot} />
         </div>
         <Card
-          title="Open orders"
+          title={t.overview.open}
           pad={false}
           actions={
             <Link to="/orders" className="btn ghost sm">
-              All orders
+              {t.overview.all}
               <IconArrowRight />
             </Link>
           }

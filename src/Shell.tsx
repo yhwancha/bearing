@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
-import { t } from './i18n'
+import { LANGS, setLang, t, useLang } from './i18n'
 import { Toaster } from './ui'
 import { BrandMark, IconBox, IconCalendar, IconInbox, IconOverview, IconRules } from './ui/icons'
 
@@ -13,6 +13,7 @@ export default function Shell({ workspace, counts, children }: {
   counts?: NavCounts
   children: ReactNode
 }) {
+  const lang = useLang()
   const initials = workspace
     .split(/\s+/)
     .map((w) => w[0])
@@ -33,7 +34,7 @@ export default function Shell({ workspace, counts, children }: {
           <BrandMark className="brand-mark" />
           {t.product}
         </NavLink>
-        <nav className="nav" aria-label="Main">
+        <nav className="nav" aria-label={t.nav.main}>
           {items.map((i) => (
             <NavLink key={i.to} to={i.to} end={i.end}>
               {i.icon}
@@ -43,6 +44,14 @@ export default function Shell({ workspace, counts, children }: {
           ))}
         </nav>
         <div className="topbar-end">
+          <div className="seg lang" role="group" aria-label={t.language}>
+            {LANGS.map((l) => (
+              <button key={l.code} lang={l.code} aria-pressed={lang === l.code} className={lang === l.code ? 'on' : ''} onClick={() => setLang(l.code)}>
+                {l.code === 'en' ? 'EN' : '한'}
+                <span className="sr-only">{l.label}</span>
+              </button>
+            ))}
+          </div>
           <div className="workspace" title={`${workspace} · ${t.workspaceRole}`}>
             <span className="avatar">{initials}</span>
             <span className="name">{workspace}</span>

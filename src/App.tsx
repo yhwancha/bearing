@@ -11,6 +11,7 @@ import Rules from './pages/Rules'
 import Statements from './pages/Statements'
 import Shell from './Shell'
 import { useStore } from './store'
+import { t } from './i18n'
 import { Empty } from './ui'
 
 export default function App() {
@@ -27,7 +28,7 @@ export default function App() {
         <Route path="/statements" element={<Statements />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/rules" element={<Rules />} />
-        <Route path="*" element={<Empty title="Page not found" />} />
+        <Route path="*" element={<Empty title={t.common.pageNotFound} />} />
       </Routes>
     </Shell>
   )

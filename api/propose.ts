@@ -1,5 +1,5 @@
 /* Suggest a Singapore Customs route for order lines that have no rule yet.
-   POST /api/propose { lines: [{desc, orderUnit}], products: [...], examples: [...] }
+   POST /api/propose { lines: [{desc, orderUnit}], products: [...], examples: [...], lang?: 'en' | 'ko' }
    → { proposals: [{desc, pattern, productSku, name, spec, unit, hs, category, sgClass, controlAuthority, rationKind, rationUnitQty, rationale}] }
    A person approves every suggestion before it becomes a rule. */
 
@@ -52,13 +52,15 @@ Prefer an existing catalog product when the line is the same item. Follow the st
 
 export default async function handler(req: any, res: any) {
   if (cors(req, res)) return
-  const { lines, products, examples } = req.body ?? {}
+  const { lines, products, examples, lang } = req.body ?? {}
   if (!Array.isArray(lines) || !lines.length) return res.status(400).json({ error: 'lines required' })
   const catalog = (products ?? []).map((p: any) => `- ${p.sku}: ${p.name} · ${p.spec} · ${p.unit} · ${p.sgClass ?? '?'}`).join('\n') || '(empty)'
   const approved = (examples ?? []).map((e: any) => `- ${e.pattern.join(' … ')} → ${e.name} (${e.sgClass})`).join('\n') || '(none)'
   const todo = lines.map((l: any) => `- desc: "${l.desc}" (ordered unit: ${l.orderUnit || '?'})`).join('\n')
+  // The reader of the rationale may work in Korean; names and codes stay in English for the permit
+  const language = lang === 'ko' ? '\n\nWrite each rationale in Korean. Keep name, spec, unit and category in English.' : ''
   try {
-    const out = await callJson(SYSTEM, `Catalog:\n${catalog}\n\nApproved rules:\n${approved}\n\nLines to classify:\n${todo}`, SCHEMA)
+    const out = await callJson(SYSTEM, `Catalog:\n${catalog}\n\nApproved rules:\n${approved}\n\nLines to classify:\n${todo}${language}`, SCHEMA)
     return res.status(200).json(out)
   } catch (e) {
     return errorResponse(res, e)

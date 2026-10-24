@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { headline, STATUS_INFO, viewOrder, type OrderView } from '../derive'
+import { headline, statusInfo, viewOrder, type OrderView } from '../derive'
 import { fmtDateTime, fmtMoney } from '../format'
-import { sumAmount, VESSEL_TYPE_LABEL } from '../sg'
+import { t } from '../i18n'
+import { sumAmount } from '../sg'
 import { useStore } from '../store'
-import type { OrderStatus, State } from '../types'
+import type { State } from '../types'
 import { Badge, Card, Empty, Flag, PageHead } from '../ui'
 import { IconPlus } from '../ui/icons'
 import Intake from './Intake'
 
-type Filter = 'all' | OrderStatus
+type Filter = (typeof FILTERS)[number]
 
 export function useOrderViews(): OrderView[] {
   const state = useStore((s) => s)
@@ -23,34 +24,34 @@ export function allViews(s: State): OrderView[] {
 export function OrderTable({ views, compact }: { views: OrderView[]; compact?: boolean }) {
   const agencies = useStore((s) => s.agencies)
   const navigate = useNavigate()
-  if (!views.length) return <Empty title="Nothing here">Orders you add will show up in this list.</Empty>
+  if (!views.length) return <Empty title={t.orders.emptyTitle}>{t.orders.empty}</Empty>
   return (
     <div className="table-wrap">
       <table className="table">
         <thead>
           <tr>
-            <th>Vessel</th>
-            {!compact && <th>Agency</th>}
-            <th>Received</th>
-            <th className="r">Lines</th>
-            {!compact && <th className="r">Value</th>}
-            <th>Status</th>
+            <th>{t.orders.vessel}</th>
+            {!compact && <th>{t.orders.agency}</th>}
+            <th>{t.orders.received}</th>
+            <th className="r">{t.orders.lines}</th>
+            {!compact && <th className="r">{t.common.value}</th>}
+            <th>{t.orders.status}</th>
           </tr>
         </thead>
         <tbody>
           {views.map((v) => {
             const o = v.order
-            const st = STATUS_INFO[v.status]
+            const st = statusInfo(v.status)
             return (
               <tr key={o.id} className="link" onClick={() => navigate(`/orders/${o.id}`)}>
                 <td>
                   <div className="row" style={{ gap: 8 }}>
                     <Flag code={o.jurisdiction} />
-                    <span className="strong">{o.vessel.name || 'Unnamed vessel'}</span>
+                    <span className="strong">{o.vessel.name || t.common.unnamedVessel}</span>
                   </div>
                   <div className="small muted">
                     <span className="mono">{o.ref}</span>
-                    {o.vessel.type && ` · ${VESSEL_TYPE_LABEL[o.vessel.type]}`}
+                    {o.vessel.type && ` · ${t.vesselType[o.vessel.type]}`}
                     {o.vessel.location && ` · ${o.vessel.location}`}
                   </div>
                 </td>
@@ -75,13 +76,7 @@ export function OrderTable({ views, compact }: { views: OrderView[]; compact?: b
   )
 }
 
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'review', label: 'Needs attention' },
-  { key: 'ready', label: 'Ready' },
-  { key: 'filed', label: 'Filed' },
-  { key: 'delivered', label: 'Delivered' },
-]
+const FILTERS = ['all', 'review', 'ready', 'filed', 'delivered'] as const
 
 export default function Orders() {
   const views = useOrderViews()
@@ -91,12 +86,12 @@ export default function Orders() {
   return (
     <>
       <PageHead
-        title="Orders"
-        sub="Stores orders from ship agencies, split into Singapore Customs routes."
+        title={t.orders.title}
+        sub={t.orders.sub}
         actions={
           <button className="btn primary" onClick={() => setIntake(true)}>
             <IconPlus />
-            New order
+            {t.orders.newOrder}
           </button>
         }
       />
@@ -105,10 +100,10 @@ export default function Orders() {
         title={
           <div className="seg" role="tablist">
             {FILTERS.map((f) => {
-              const n = f.key === 'all' ? views.length : views.filter((v) => v.status === f.key).length
+              const n = f === 'all' ? views.length : views.filter((v) => v.status === f).length
               return (
-                <button key={f.key} role="tab" aria-selected={filter === f.key} className={filter === f.key ? 'on' : ''} onClick={() => setFilter(f.key)}>
-                  {f.label} <span className="faint num">{n}</span>
+                <button key={f} role="tab" aria-selected={filter === f} className={filter === f ? 'on' : ''} onClick={() => setFilter(f)}>
+                  {t.orders.filters[f]} <span className="faint num">{n}</span>
                 </button>
               )
             })}
