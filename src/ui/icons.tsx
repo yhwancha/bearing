@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import type { SVGProps } from 'react'
 
 type P = SVGProps<SVGSVGElement> & { size?: number }
@@ -82,11 +83,22 @@ export const IconReset = (p: P) => (
 )
 
 export function BrandMark({ className }: { className?: string }) {
+  // Navy in light mode, follows --brand in dark mode; the bearing dot stays blue
+  const mask = `bm-${useId()}`
   return (
-    <svg className={className} viewBox="0 0 32 32" aria-hidden>
-      <rect width="32" height="32" rx="8" fill="var(--brand)" />
-      <circle cx="16" cy="16" r="8.5" fill="none" stroke="#2DD4BF" strokeWidth="3" />
-      <path d="M16 4.5v6M16 21.5v6M4.5 16h6M21.5 16h6" stroke="#2DD4BF" strokeWidth="3" strokeLinecap="round" />
+    <svg className={className} viewBox="0 0 100 100" aria-hidden>
+      <defs>
+        <mask id={mask} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+          <rect width="100" height="100" fill="#fff" />
+          <circle cx="74.971" cy="43.029" r="13" fill="#000" />
+        </mask>
+      </defs>
+      <g mask={`url(#${mask})`} fill="var(--brand)">
+        <rect x="26.5" y="4" width="15" height="56" rx="7.5" />
+        <rect x="26.5" y="45" width="15" height="46.5" />
+        <circle cx="58" cy="60" r="24" fill="none" stroke="var(--brand)" strokeWidth="15" />
+      </g>
+      <circle cx="74.971" cy="43.029" r="8.5" fill="#1B64B4" />
     </svg>
   )
 }
